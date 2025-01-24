@@ -16,21 +16,21 @@ class Config:
     YAML_SUBDIRECTORY = os.getenv('YAML_SUBDIRECTORY', 'vms/')
 
     def __init__(self):
+        # Validate immediately during initialization
         self.validate_config()
 
-    @classmethod
-    def validate_config(cls):
+    def validate_config(self):
+        """Validate required environment variables and raise EnvironmentError if missing"""
         required_vars = [
-            ('GIT_REPO_URL', cls.GIT_REPO_URL),
-            ('GIT_USERNAME', cls.GIT_USERNAME),
-            ('GIT_TOKEN', cls.GIT_TOKEN),
+            ('GIT_REPO_URL', self.GIT_REPO_URL),
+            ('GIT_USERNAME', self.GIT_USERNAME),
+            ('GIT_TOKEN', self.GIT_TOKEN),
         ]
 
         missing_vars = [var_name for var_name, var_value in required_vars if not var_value]
 
         if missing_vars:
             error_msg = (
-                "ERROR: Missing required environment variables:\n"
                 f"{', '.join(missing_vars)}\n\n"
                 "Please set these variables in your .env file or environment.\n"
                 "Example .env file:\n"

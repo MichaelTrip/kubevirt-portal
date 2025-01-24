@@ -2,9 +2,9 @@ name: Build Development Image
 
 on:
   push:
-    branches:
-      - main
-      - develop
+#    branches:
+#      - main
+#      - develop
 
 env:
   REGISTRY: ghcr.io
