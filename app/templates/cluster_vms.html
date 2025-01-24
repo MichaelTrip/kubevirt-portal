@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-diagram-3 me-2"></i>Cluster Virtual Machines</h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-secondary active" id="cardView">
+                <i class="bi bi-grid-3x3-gap"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="tableView">
+                <i class="bi bi-table"></i>
+            </button>
+        </div>
+    </div>
+
+    {% if vms %}
+    <div id="cardLayout" class="row row-cols-1 row-cols-md-2 g-4">
+        {% for vm in vms %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pc me-2"></i>{{ vm.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-cpu me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">CPU Cores</small>
+                                    <strong>{{ vm.cpu_cores }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-memory me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Memory</small>
+                                    <strong>{{ vm.memory }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-hdd me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Node</small>
+                                    <strong>{{ vm.vmi.node if vm.vmi else 'N/A' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-globe me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Status</small>
+                                    <strong>
+                                        {% if vm.running %}
+                                        <span class="badge bg-success">Running</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Stopped</span>
+                                        {% endif %}
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="small text-muted mb-3">
+                        <div class="mb-2">
+                            <i class="bi bi-diagram-2 me-2"></i>Pod IP Addresses:
+                            {% if vm.vmi and vm.vmi.ip_addresses %}
+                            {% for ip in vm.vmi.ip_addresses %}
+                            <span class="badge bg-info">{{ ip }}</span>
+                            {% endfor %}
+                            {% else %}
+                            <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </div>
+                        {% if vm.service %}
+                        <div class="mb-2">
+                            <i class="bi bi-hdd-network me-2"></i>Service Details:
+                            <div class="ms-4">
+                                <div>Type: <span class="badge bg-secondary">{{ vm.service.type }}</span></div>
+                                {% if vm.service.external_ips %}
+                                <div>External IPs:
+                                    {% for ip in vm.service.external_ips %}
+                                    <span class="badge bg-primary">{{ ip }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div>Cluster IP: <span class="badge bg-info">{{ vm.service.cluster_ip }}</span></div>
+                                <div>Ports:
+                                    {% for port in vm.service.ports %}
+                                    <span class="badge bg-secondary">
+                                        {{ port.name }}: {{ port.port }}:{{ port.target_port }} ({{ port.protocol }})
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if vm.labels %}
+                        <div>
+                            <i class="bi bi-tags me-2"></i>Labels:
+                            {% for key, value in vm.labels.items() %}
+                            <span class="badge bg-secondary me-1">{{ key }}: {{ value }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary view-yaml" data-vm-name="{{ vm.name }}">
+                            <i class="bi bi-code-square me-1"></i>View VM YAML
+                        </button>
+                        {% if vm.service %}
+                        <button type="button" class="btn btn-sm btn-outline-info view-service-yaml" data-service-name="{{ vm.name }}">
+                            <i class="bi bi-code-square me-1"></i>View Service YAML
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="tableLayout" class="d-none">
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Namespace</th>
+                        <th>Status</th>
+                        <th>CPU</th>
+                        <th>Memory</th>
+                        <th>Node</th>
+                        <th>IP Addresses</th>
+                        <th>Labels</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vm in vms %}
+                    <tr>
+                        <td><i class="bi bi-pc me-2"></i>{{ vm.name }}</td>
+                        <td>{{ vm.namespace }}</td>
+                        <td>
+                            {% if vm.running %}
+                            <span class="badge bg-success">Running</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Stopped</span>
+                            {% endif %}
+                        </td>
+                        <td><i class="bi bi-cpu me-2"></i>{{ vm.cpu_cores }}</td>
+                        <td><i class="bi bi-memory me-2"></i>{{ vm.memory }}</td>
+                        <td>
+                            {% if vm.vmi %}
+                            <span class="badge bg-primary">{{ vm.vmi.node }}</span>
+                            {% else %}
+                            <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vm.vmi and vm.vmi.ip_addresses %}
+                            {% for ip in vm.vmi.ip_addresses %}
+                            <span class="badge bg-info">{{ ip }}</span>
+                            {% endfor %}
+                            {% else %}
+                            <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for key, value in vm.labels.items() %}
+                            <span class="badge bg-secondary me-1">{{ key }}: {{ value }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>{{ vm.created }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+            <h3 class="text-muted">No VMs Found in Cluster</h3>
+            <p class="text-muted mb-0">No virtual machines were found running in the Kubernetes cluster</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- YAML Modal -->
+<div class="modal fade" id="yamlModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">VM YAML Configuration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre><code id="yamlContent"></code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cardView = document.getElementById('cardView');
+    const tableView = document.getElementById('tableView');
+    const cardLayout = document.getElementById('cardLayout');
+    const tableLayout = document.getElementById('tableLayout');
+
+    // Load saved preference
+    const viewPreference = localStorage.getItem('clusterVmViewPreference') || 'card';
+    if (viewPreference === 'table') {
+        showTableView();
+    }
+
+    cardView.addEventListener('click', function() {
+        showCardView();
+        localStorage.setItem('clusterVmViewPreference', 'card');
+    });
+
+    tableView.addEventListener('click', function() {
+        showTableView();
+        localStorage.setItem('clusterVmViewPreference', 'table');
+    });
+
+    function showCardView() {
+        cardLayout.classList.remove('d-none');
+        tableLayout.classList.add('d-none');
+        cardView.classList.add('active');
+        tableView.classList.remove('active');
+    }
+
+    function showTableView() {
+        cardLayout.classList.add('d-none');
+        tableLayout.classList.remove('d-none');
+        cardView.classList.remove('active');
+        tableView.classList.add('active');
+    }
+
+    // YAML Modal handling
+    const yamlModal = new bootstrap.Modal(document.getElementById('yamlModal'));
+    const yamlContent = document.getElementById('yamlContent');
+
+    document.querySelectorAll('.view-yaml').forEach(button => {
+        button.addEventListener('click', async function() {
+            const vmName = this.dataset.vmName;
+            try {
+                const response = await fetch(`/api/vm/${vmName}/yaml`);
+                const yaml = await response.text();
+                yamlContent.textContent = yaml;
+                yamlModal.show();
+            } catch (error) {
+                console.error('Error fetching YAML:', error);
+            }
+        });
+    });
+
+    document.querySelectorAll('.view-service-yaml').forEach(button => {
+        button.addEventListener('click', async function() {
+            const serviceName = this.dataset.serviceName;
+            try {
+                const response = await fetch(`/api/service/${serviceName}/yaml`);
+                const yaml = await response.text();
+                yamlContent.textContent = yaml;
+                yamlModal.show();
+            } catch (error) {
+                console.error('Error fetching Service YAML:', error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set image name
+        run: |
+          echo "IMAGE_NAME=$(echo ${{ github.repository_owner }}/kubevirt-portal | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Version: $VERSION"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Extract Changelog Entry
+        id: changelog
+        run: |
+          VERSION=${{ env.VERSION }}
+          CHANGELOG_ENTRY=$(awk -v ver="$VERSION" '/^## \[/ {p=0} /^## \['${VERSION}'\]/ {p=1;next} p' CHANGELOG.md)
+          echo "CHANGELOG_ENTRY<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG_ENTRY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: Release ${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          body: ${{ env.CHANGELOG_ENTRY }}
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true

@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Create Virtual Machine</h1>
+
+{% if preview_yaml %}
+<div class="mb-4">
+    <h3>Preview YAML</h3>
+    <pre><code>{{ preview_yaml }}</code></pre>
+</div>
+{% endif %}
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        <label class="form-label">VM Name</label>
+        {{ form.vm_name(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">YAML Subdirectory</label>
+        {{ form.subdirectory(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">CPU Cores</label>
+        {{ form.cpu_cores(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Memory (GB)</label>
+        {{ form.memory(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Storage Size (GB)</label>
+        {{ form.storage_size(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Storage Class</label>
+        {{ form.storage_class(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Image URL</label>
+        {{ form.image_url(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">User Data</label>
+        {{ form.user_data(class="form-control", rows="10", placeholder="#cloud-config
+ssh_pwauth: true
+users:
+  - name: myuser
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Hostname</label>
+        {{ form.hostname(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Address Pool</label>
+        {{ form.address_pool(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tags</label>
+        <div id="vm-tags">
+            {% for tag_form in form.tags %}
+            <div class="row mb-2 tag-entry">
+                <div class="col">
+                    {{ tag_form.key(class="form-control", placeholder="Tag Key") }}
+                </div>
+                <div class="col">
+                    {{ tag_form.value(class="form-control", placeholder="Tag Value") }}
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-danger remove-tag">Remove</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-secondary" id="add-tag">Add Tag</button>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Service Ports</label>
+        <div id="service-ports">
+            {% for port_form in form.service_ports %}
+            <div class="row mb-2 port-entry">
+                <div class="col">
+                    {{ port_form.port_name(class="form-control", placeholder="Port Name") }}
+                </div>
+                <div class="col">
+                    {{ port_form.port(class="form-control", placeholder="Port") }}
+                </div>
+                <div class="col">
+                    {{ port_form.protocol(class="form-control") }}
+                </div>
+                <div class="col">
+                    {{ port_form.targetPort(class="form-control", placeholder="Target Port") }}
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-danger remove-port">Remove</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-secondary" id="add-port">Add Port</button>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" name="preview" class="btn btn-secondary">Preview</button>
+        <button type="submit" class="btn btn-primary">Create VM</button>
+        <a href="{{ url_for('main.vm_list') }}" class="btn btn-link">Cancel</a>
+    </div>
+</form>
+
+<script>
+document.getElementById('add-port').addEventListener('click', function() {
+    const portsDiv = document.getElementById('service-ports');
+    const portRows = portsDiv.getElementsByClassName('port-entry');
+    const newPort = portRows[0].cloneNode(true);
+
+    // Update input names and IDs for the new port
+    const inputs = newPort.querySelectorAll('input, select');
+    const newIndex = portRows.length;
+
+    inputs.forEach(input => {
+        const oldName = input.getAttribute('name');
+        const oldId = input.getAttribute('id');
+
+        // Update name (e.g., from "service_ports-0-port_name" to "service_ports-1-port_name")
+        if (oldName) {
+            const newName = oldName.replace(/\d+/, newIndex);
+            input.setAttribute('name', newName);
+        }
+
+        // Update id if it exists
+        if (oldId) {
+            const newId = oldId.replace(/\d+/, newIndex);
+            input.setAttribute('id', newId);
+        }
+
+        // Clear the input value
+        input.value = '';
+
+        // Reset select elements to default
+        if (input.tagName === 'SELECT') {
+            input.selectedIndex = 0;
+        }
+    });
+
+    portsDiv.appendChild(newPort);
+});
+
+document.getElementById('service-ports').addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-port')) {
+        const portRows = document.querySelectorAll('#service-ports .port-entry');
+        if (portRows.length > 1) {
+            const row = e.target.closest('.port-entry');
+            row.remove();
+
+            // Renumber remaining ports
+            portRows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    const oldName = input.getAttribute('name');
+                    const oldId = input.getAttribute('id');
+
+                    if (oldName) {
+                        const newName = oldName.replace(/\d+/, index);
+                        input.setAttribute('name', newName);
+                    }
+
+                    if (oldId) {
+                        const newId = oldId.replace(/\d+/, index);
+                        input.setAttribute('id', newId);
+                    }
+                });
+            });
+        }
+    }
+});
+
+// Debug form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    const ports = document.querySelectorAll('#service-ports .port-entry');
+    console.log(`Submitting form with ${ports.length} ports`);
+    ports.forEach((port, index) => {
+        const inputs = port.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            console.log(`Port ${index}: ${input.name} = ${input.value}`);
+        });
+    });
+});
+
+// Tags management
+document.getElementById('add-tag').addEventListener('click', function() {
+    const tagsDiv = document.getElementById('vm-tags');
+    const tagRows = tagsDiv.getElementsByClassName('tag-entry');
+    const newTag = tagRows[0].cloneNode(true);
+
+    // Update input names and IDs for the new tag
+    const inputs = newTag.querySelectorAll('input');
+    const newIndex = tagRows.length;
+
+    inputs.forEach(input => {
+        const oldName = input.getAttribute('name');
+        const oldId = input.getAttribute('id');
+
+        if (oldName) {
+            const newName = oldName.replace(/\d+/, newIndex);
+            input.setAttribute('name', newName);
+        }
+
+        if (oldId) {
+            const newId = oldId.replace(/\d+/, newIndex);
+            input.setAttribute('id', newId);
+        }
+
+        input.value = '';
+    });
+
+    tagsDiv.appendChild(newTag);
+});
+
+document.getElementById('vm-tags').addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-tag')) {
+        const tagRows = document.querySelectorAll('#vm-tags .tag-entry');
+        if (tagRows.length > 1) {
+            const row = e.target.closest('.tag-entry');
+            row.remove();
+        }
+    }
+});
+</script>
+{% endblock %}

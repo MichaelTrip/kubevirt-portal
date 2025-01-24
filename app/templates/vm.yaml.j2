@@ -1,0 +1,73 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ vm_name }}
+spec:
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: {{ vm_name }}
+        {% for tag in tags %}
+        {{ tag.key }}: {{ tag.value }}
+        {% endfor %}
+      annotations:
+        kubevirt.io/allow-pod-bridge-network-live-migration: "true"
+    spec:
+      evictionStrategy: LiveMigrate
+      domain:
+        cpu:
+          cores: {{ cpu_cores }}
+        resources:
+          requests:
+            memory: {{ memory }}G
+          limits:
+            memory: {{ memory }}G
+        devices:
+          disks:
+            - name: {{ vm_name }}-pvc
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: podnet
+              masquerade: {}
+      networks:
+        - name: podnet
+          pod: {}
+      volumes:
+        - name: {{ vm_name }}-pvc
+          persistentVolumeClaim:
+            claimName: {{ vm_name }}-pvc
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            networkData: |-
+              network:
+                version: 1
+                config:
+                  - type: physical
+                    name: enp1s0
+                    subnets:
+                      - type: dhcp
+                      - type: static6
+                        address: fd10:0:2::2/120
+                        gateway: fd10:0:2::1
+            userData: |-
+{{ user_data | indent(14, True) }}
+  dataVolumeTemplates:
+    - metadata:
+        name: {{ vm_name }}-pvc
+        creationTimestamp: null
+      spec:
+        storage:
+          resources:
+            requests:
+              storage: {{ storage_size }}Gi
+          accessModes:
+            - ReadWriteMany
+          storageClassName: {{ storage_class }}
+        source:
+          http:
+            url: {{ image_url }}
