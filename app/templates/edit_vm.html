@@ -55,6 +55,26 @@
         </div>
 
         <div class="mb-3">
+            <label class="form-label">Tags</label>
+            <div id="vm-tags">
+                {% for tag_form in form.tags %}
+                <div class="row mb-2 tag-entry">
+                    <div class="col">
+                        {{ tag_form.key(class="form-control", placeholder="Tag Key") }}
+                    </div>
+                    <div class="col">
+                        {{ tag_form.value(class="form-control", placeholder="Tag Value") }}
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-danger remove-tag">Remove</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn btn-secondary" id="add-tag">Add Tag</button>
+        </div>
+
+        <div class="mb-3">
             <label class="form-label">Service Ports</label>
             <div id="service-ports">
                 {% for port_form in form.service_ports %}
@@ -86,4 +106,46 @@
         </div>
     </form>
 </div>
+
+<script>
+// Tags management
+document.getElementById('add-tag').addEventListener('click', function() {
+    const tagsDiv = document.getElementById('vm-tags');
+    const tagRows = tagsDiv.getElementsByClassName('tag-entry');
+    const newTag = tagRows[0].cloneNode(true);
+
+    // Update input names and IDs for the new tag
+    const inputs = newTag.querySelectorAll('input');
+    const newIndex = tagRows.length;
+
+    inputs.forEach(input => {
+        const oldName = input.getAttribute('name');
+        const oldId = input.getAttribute('id');
+
+        if (oldName) {
+            const newName = oldName.replace(/\d+/, newIndex);
+            input.setAttribute('name', newName);
+        }
+
+        if (oldId) {
+            const newId = oldId.replace(/\d+/, newIndex);
+            input.setAttribute('id', newId);
+        }
+
+        input.value = '';
+    });
+
+    tagsDiv.appendChild(newTag);
+});
+
+document.getElementById('vm-tags').addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-tag')) {
+        const tagRows = document.querySelectorAll('#vm-tags .tag-entry');
+        if (tagRows.length > 1) {
+            const row = e.target.closest('.tag-entry');
+            row.remove();
+        }
+    }
+});
+</script>
 {% endblock %}

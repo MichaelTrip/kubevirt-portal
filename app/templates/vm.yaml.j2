@@ -8,6 +8,9 @@ spec:
     metadata:
       labels:
         kubevirt.io/vm: {{ vm_name }}
+        {% for tag in tags %}
+        {{ tag.key }}: {{ tag.value }}
+        {% endfor %}
       annotations:
         kubevirt.io/allow-pod-bridge-network-live-migration: "true"
     spec:
