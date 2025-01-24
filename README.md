@@ -1,6 +1,6 @@
-# Project Name
+# Git Repository Setup Example
 
-Description of your project goes here.
+A demonstration project showing how to properly set up a Git repository with standard configuration files and best practices.
 
 ## Installation
 
