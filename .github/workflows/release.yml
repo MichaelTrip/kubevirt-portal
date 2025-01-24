@@ -52,6 +52,15 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
+      - name: Extract Changelog Entry
+        id: changelog
+        run: |
+          VERSION=${{ env.VERSION }}
+          CHANGELOG_ENTRY=$(awk -v ver="$VERSION" '/^## \[/ {p=0} /^## \['${VERSION}'\]/ {p=1;next} p' CHANGELOG.md)
+          echo "CHANGELOG_ENTRY<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG_ENTRY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         if: success()
@@ -60,7 +69,7 @@ jobs:
         with:
           name: Release ${{ env.VERSION }}
           tag_name: v${{ env.VERSION }}
+          body: ${{ env.CHANGELOG_ENTRY }}
           draft: false
           prerelease: false
-          generate_release_notes: true
           fail_on_unmatched_files: true
