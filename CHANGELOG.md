@@ -19,3 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Storage class support
   - MetalLB integration
   - YAML preview functionality
+## [Unreleased]
+
+## [1.0.0] - 2025-01-24
+
+### Added
+- Initial release of KubeVirt Portal
+- Basic VM management functionality
+- GitHub Actions workflows for development and release builds

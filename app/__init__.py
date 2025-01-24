@@ -24,7 +24,7 @@ def create_app():
         logger.error(f"Missing required environment variables: {str(e)}")
         # Exit immediately without returning app object
         sys.exit(1)
-        
+
     try:
         app = Flask(__name__)
         app.config.from_object(config)
