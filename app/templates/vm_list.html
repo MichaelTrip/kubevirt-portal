@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Virtual Machines</h1>
+    <a href="{{ url_for('main.create_vm') }}" class="btn btn-primary mb-3">Create New VM</a>
+
+    {% if vms %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>CPU Cores</th>
+                <th>Memory</th>
+                <th>Hostname</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vm in vms %}
+            <tr>
+                <td>{{ vm.name }}</td>
+                <td>{{ vm.cpu }}</td>
+                <td>{{ vm.memory }}</td>
+                <td>{{ vm.hostname }}</td>
+                <td>
+                    <a href="{{ url_for('main.edit_vm', vm_name=vm.name) }}" class="btn btn-sm btn-primary">Edit</a>
+                    <form action="{{ url_for('main.delete_vm', vm_name=vm.name) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this VM?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info">
+        No VMs found in directory: {{ config.YAML_SUBDIRECTORY }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
