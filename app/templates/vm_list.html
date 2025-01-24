@@ -74,6 +74,14 @@
                     <div class="small text-muted mb-3">
                         <div><i class="bi bi-box me-2"></i>Image: {{ vm.image.split('/')[-1] }}</div>
                         <div><i class="bi bi-diagram-2 me-2"></i>Network Pool: {{ vm.address_pool }}</div>
+                        {% if vm.tags %}
+                        <div class="mt-2">
+                            <i class="bi bi-tags me-2"></i>Tags:
+                            {% for tag in vm.tags %}
+                            <span class="badge bg-secondary me-1">{{ tag.key }}: {{ tag.value }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
@@ -105,6 +113,7 @@
                             <th>Memory</th>
                             <th>Storage</th>
                             <th>Hostname</th>
+                            <th>Tags</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -116,6 +125,13 @@
                             <td><i class="bi bi-memory me-2"></i>{{ vm.memory }}</td>
                             <td><i class="bi bi-hdd me-2"></i>{{ vm.storage }}</td>
                             <td><i class="bi bi-globe me-2"></i>{{ vm.hostname }}</td>
+                            <td>
+                                {% if vm.tags %}
+                                {% for tag in vm.tags %}
+                                <span class="badge bg-secondary me-1">{{ tag.key }}: {{ tag.value }}</span>
+                                {% endfor %}
+                                {% endif %}
+                            </td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{{ url_for('main.edit_vm', vm_name=vm.name) }}" class="btn btn-sm btn-outline-primary">

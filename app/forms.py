@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, TextAreaField, SelectField, FieldList, FormField
+from wtforms import StringField, IntegerField, TextAreaField, SelectField, FieldList, FormField, FieldList
 from wtforms.validators import DataRequired, NumberRange
 
 class ServicePortForm(FlaskForm):
@@ -12,8 +12,16 @@ class ServicePortForm(FlaskForm):
         # Disable CSRF for nested forms
         csrf = False
 
+class TagForm(FlaskForm):
+    key = StringField('Key', validators=[DataRequired()])
+    value = StringField('Value', validators=[DataRequired()])
+    
+    class Meta:
+        csrf = False
+
 class VMForm(FlaskForm):
     vm_name = StringField('VM Name', validators=[DataRequired()])
+    tags = FieldList(FormField(TagForm), min_entries=1)
     subdirectory = StringField('YAML Subdirectory', default='vms')
     cpu_cores = IntegerField('CPU Cores', validators=[DataRequired(), NumberRange(min=1, max=16)])
     memory = IntegerField('Memory (GB)', validators=[DataRequired(), NumberRange(min=1, max=64)])

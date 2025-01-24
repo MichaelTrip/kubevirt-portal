@@ -36,6 +36,7 @@ def generate_yaml(form_data):
             'image_url': form_data['image_url'],
             'hostname': form_data['hostname'],
             'address_pool': form_data['address_pool'],
+            'tags': form_data.get('tags', []),
             'service_ports': [
                 {
                     'port_name': port['port_name'],
@@ -151,6 +152,13 @@ def get_vm_list(config):
                                 # Extract memory value and convert to standard format
                                 memory = vm_config['spec']['template']['spec']['domain']['resources']['requests']['memory']
 
+                                # Extract tags from labels
+                                tags = []
+                                labels = vm_config['spec']['template']['metadata']['labels']
+                                for key, value in labels.items():
+                                    if key != 'kubevirt.io/vm':  # Skip the default label
+                                        tags.append({'key': key, 'value': value})
+
                                 vm_info = {
                                     'name': vm_config['metadata']['name'],
                                     'cpu': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
@@ -158,7 +166,8 @@ def get_vm_list(config):
                                     'hostname': service_config['metadata']['annotations'].get('external-dns.alpha.kubernetes.io/hostname', 'N/A'),
                                     'storage': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'],
                                     'image': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
-                                    'address_pool': service_config['metadata']['annotations'].get('metallb.universe.tf/address-pool', 'default')
+                                    'address_pool': service_config['metadata']['annotations'].get('metallb.universe.tf/address-pool', 'default'),
+                                    'tags': tags
                                 }
                                 vms.append(vm_info)
                                 logger.debug(f"Added VM to list: {vm_info['name']}")
@@ -186,8 +195,16 @@ def get_vm_config(config, vm_name):
             vm_config = docs[0]
             service_config = docs[1]
 
+            # Extract tags from labels
+            tags = []
+            labels = vm_config['spec']['template']['metadata']['labels']
+            for key, value in labels.items():
+                if key != 'kubevirt.io/vm':  # Skip the default label
+                    tags.append({'key': key, 'value': value})
+
             return {
                 'vm_name': vm_config['metadata']['name'],
+                'tags': tags,
                 'cpu_cores': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
                 'memory': int(vm_config['spec']['template']['spec']['domain']['resources']['requests']['memory'].rstrip('G')),
                 'storage_size': int(vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'].rstrip('Gi')),
@@ -198,7 +215,7 @@ def get_vm_config(config, vm_name):
                 'address_pool': service_config['metadata']['annotations']['metallb.universe.tf/address-pool'],
                 'service_ports': [
                     {
-                        'name': port['name'],
+                        'port_name': port['name'],  # Changed from 'name' to 'port_name' to match form field
                         'port': port['port'],
                         'protocol': port['protocol'],
                         'targetPort': port['targetPort']
