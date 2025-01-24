@@ -2572,3 +2572,71 @@ git.exc.GitCommandError: Cmd('push') failed due to: 'Failed to push to remote: [
 2025-01-23 22:35:23,252 - app.utils - INFO - Found 26 VMs
 2025-01-23 22:35:23,257 - werkzeug - INFO - 127.0.0.1 - - [23/Jan/2025 22:35:23] "GET / HTTP/1.1" 200 -
 2025-01-23 22:35:23,319 - werkzeug - INFO - 127.0.0.1 - - [23/Jan/2025 22:35:23] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-01-24 12:36:04,399 - app - DEBUG - Starting application initialization
+2025-01-24 12:36:04,458 - git.cmd - DEBUG - Popen(['git', 'version'], cwd=/home/michael/dev/kubevirt-portal, stdin=None, shell=False, universal_newlines=False)
+2025-01-24 12:36:04,460 - git.cmd - DEBUG - Popen(['git', 'version'], cwd=/home/michael/dev/kubevirt-portal, stdin=None, shell=False, universal_newlines=False)
+2025-01-24 12:36:04,466 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-01-24 12:36:04,466 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-01-24 12:36:10,361 - app.routes - INFO - Fetching VM list
+2025-01-24 12:36:10,361 - app.utils - INFO - Starting to fetch VM list
+2025-01-24 12:36:10,362 - app.utils - DEBUG - Created temporary directory: /tmp/tmpzpdjw5bf
+2025-01-24 12:36:10,362 - app.utils - INFO - Cloning repository
+2025-01-24 12:36:10,366 - git.cmd - DEBUG - Popen(['git', 'clone', '-v', '--', 'https://*****:*****@git.alcatrash.net/michael/testrepo.git', '/tmp/tmpzpdjw5bf'], cwd=/home/michael/dev/kubevirt-portal, stdin=None, shell=False, universal_newlines=True)
+2025-01-24 12:36:10,864 - git.repo.base - DEBUG - Cmd(['git', 'clone', '-v', '--', 'https://*****:*****@git.alcatrash.net/michael/testrepo.git', '/tmp/tmpzpdjw5bf'])'s unused stdout: 
+2025-01-24 12:36:10,870 - app.utils - DEBUG - Looking for VMs in directory: /tmp/tmpzpdjw5bf/vms/
+2025-01-24 12:36:10,870 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/adssdasd.yaml
+2025-01-24 12:36:10,892 - app.utils - DEBUG - Added VM to list: adssdasd
+2025-01-24 12:36:10,892 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm10.yaml
+2025-01-24 12:36:10,914 - app.utils - DEBUG - Added VM to list: testvm10
+2025-01-24 12:36:10,914 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm12.yaml
+2025-01-24 12:36:10,937 - app.utils - DEBUG - Added VM to list: testvm12
+2025-01-24 12:36:10,937 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm14.yaml
+2025-01-24 12:36:10,958 - app.utils - DEBUG - Added VM to list: testvm14
+2025-01-24 12:36:10,958 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm15.yaml
+2025-01-24 12:36:10,978 - app.utils - DEBUG - Added VM to list: testvm15
+2025-01-24 12:36:10,978 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm16.yaml
+2025-01-24 12:36:10,991 - app.utils - DEBUG - Added VM to list: testvm16
+2025-01-24 12:36:10,991 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm17.yaml
+2025-01-24 12:36:11,002 - app.utils - DEBUG - Added VM to list: testvm17
+2025-01-24 12:36:11,002 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm19.yaml
+2025-01-24 12:36:11,010 - app.utils - DEBUG - Added VM to list: testvm19
+2025-01-24 12:36:11,010 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm2.yaml
+2025-01-24 12:36:11,016 - app.utils - DEBUG - Added VM to list: testvm2
+2025-01-24 12:36:11,017 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm20.yaml
+2025-01-24 12:36:11,023 - app.utils - DEBUG - Added VM to list: testvm20
+2025-01-24 12:36:11,024 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm21.yaml
+2025-01-24 12:36:11,030 - app.utils - DEBUG - Added VM to list: testvm21
+2025-01-24 12:36:11,030 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm23.yaml
+2025-01-24 12:36:11,037 - app.utils - DEBUG - Added VM to list: testvm23
+2025-01-24 12:36:11,037 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm24.yaml
+2025-01-24 12:36:11,044 - app.utils - DEBUG - Added VM to list: testvm24
+2025-01-24 12:36:11,044 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm26.yaml
+2025-01-24 12:36:11,050 - app.utils - DEBUG - Added VM to list: testvm26
+2025-01-24 12:36:11,050 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm3.yaml
+2025-01-24 12:36:11,056 - app.utils - DEBUG - Added VM to list: testvm3
+2025-01-24 12:36:11,056 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm4.yaml
+2025-01-24 12:36:11,062 - app.utils - DEBUG - Added VM to list: testvm4
+2025-01-24 12:36:11,062 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm5.yaml
+2025-01-24 12:36:11,068 - app.utils - DEBUG - Added VM to list: testvm5
+2025-01-24 12:36:11,068 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm51.yaml
+2025-01-24 12:36:11,074 - app.utils - DEBUG - Added VM to list: testvm51
+2025-01-24 12:36:11,074 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm59.yaml
+2025-01-24 12:36:11,079 - app.utils - DEBUG - Added VM to list: testvm59
+2025-01-24 12:36:11,079 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm6.yaml
+2025-01-24 12:36:11,085 - app.utils - DEBUG - Added VM to list: testvm6
+2025-01-24 12:36:11,085 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm66.yaml
+2025-01-24 12:36:11,092 - app.utils - DEBUG - Added VM to list: testvm66
+2025-01-24 12:36:11,092 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm7.yaml
+2025-01-24 12:36:11,098 - app.utils - DEBUG - Added VM to list: testvm7
+2025-01-24 12:36:11,098 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm77.yaml
+2025-01-24 12:36:11,104 - app.utils - DEBUG - Added VM to list: testvm77
+2025-01-24 12:36:11,104 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm8.yaml
+2025-01-24 12:36:11,110 - app.utils - DEBUG - Added VM to list: testvm8
+2025-01-24 12:36:11,110 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm88.yaml
+2025-01-24 12:36:11,116 - app.utils - DEBUG - Added VM to list: testvm88
+2025-01-24 12:36:11,116 - app.utils - DEBUG - Processing file: /tmp/tmpzpdjw5bf/vms/testvm9.yaml
+2025-01-24 12:36:11,123 - app.utils - DEBUG - Added VM to list: testvm9
+2025-01-24 12:36:11,123 - app.utils - INFO - Found 26 VMs
+2025-01-24 12:36:11,131 - werkzeug - INFO - 127.0.0.1 - - [24/Jan/2025 12:36:11] "GET / HTTP/1.1" 200 -
+2025-01-24 12:36:11,228 - werkzeug - INFO - 127.0.0.1 - - [24/Jan/2025 12:36:11] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
