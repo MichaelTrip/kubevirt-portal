@@ -2,205 +2,166 @@
 
 # 🚀 KubeVirt Portal
 
-### Modern Virtual Machine Management for Kubernetes
+### Git-Backed Virtual Machine Management for KubeVirt
 
 [![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/flask-v2.0+-green.svg)](https://flask.palletsprojects.com/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Flask](https://img.shields.io/badge/flask-v2.3.3-green.svg)](https://flask.palletsprojects.com/)
+[![Jinja2](https://img.shields.io/badge/jinja2-v3.0.0+-red.svg)](https://jinja.palletsprojects.com/)
+[![GitPython](https://img.shields.io/badge/gitpython-v3.1.40-orange.svg)](https://gitpython.readthedocs.io/)
 
 <p align="center">
-  <strong>A powerful, intuitive web interface for managing KubeVirt virtual machines in Kubernetes clusters.</strong>
+  <strong>A sophisticated web portal for managing KubeVirt VMs with Git-based configuration management</strong>
 </p>
 
-[Key Features](#-key-features) •
-[Quick Start](#-quick-start) •
-[Documentation](#-documentation) •
-[Contributing](#-contributing)
+[Features](#-features) •
+[Installation](#-installation) •
+[Configuration](#-configuration) •
+[Development](#-development)
 
 </div>
 
 ## 🌟 Overview
 
-KubeVirt Portal revolutionizes virtual machine management in Kubernetes environments by providing an elegant, user-friendly interface. Built with modern Python and Flask, it seamlessly integrates with your existing Kubernetes infrastructure.
+KubeVirt Portal is a modern web application that combines KubeVirt with Git-based configuration management. It provides a user-friendly interface for creating and managing virtual machines in Kubernetes clusters while maintaining all configurations in version control.
 
-## ✨ Key Features
+## ✨ Features
 
-🖥️ **Comprehensive VM Management**
-- Intuitive web-based interface
-- Full lifecycle management (create, start, stop, delete)
-- Real-time resource monitoring
-- Seamless Kubernetes integration
+### 🔧 Core Functionality
+- **Git Integration**: Version-controlled VM configurations
+- **Template System**: Jinja2-powered YAML generation
+- **Resource Management**: CPU, memory, and storage allocation
+- **Network Configuration**: Service ports and MetalLB integration
 
-⚡ **Power Features**
-- One-click VM deployment
-- Resource optimization tools
-- Advanced configuration options
-- Integrated monitoring dashboard
+### 💻 VM Configuration
+- CPU allocation (1-16 cores)
+- Memory sizing (1-64 GB)
+- Storage configuration
+  - Dynamic size allocation
+  - Storage class selection
+  - Default Longhorn RWX support
+- Network settings
+  - Custom hostnames
+  - Service port mapping
+  - Protocol selection (TCP/UDP)
+- Cloud-init integration
 
-## Prerequisites
+### 🛠 Technical Features
+- **Security**
+  - Git authentication
+  - Environment-based configuration
+  - Secret management
+- **Deployment Options**
+  - Docker container
+  - Kubernetes deployment
+  - Resource limits and requests
+- **Development Tools**
+  - Debug mode
+  - Comprehensive logging
+  - YAML preview functionality
 
-- Kubernetes cluster (v1.16+)
-- KubeVirt installed on the cluster
-- Modern web browser
+## 🚀 Quick Start
+
+### Prerequisites
+- Kubernetes cluster with KubeVirt
+- Git repository for configurations
 - kubectl CLI tool
 
-## Installation
+### Kubernetes Deployment
 
-1. Clone the repository:
+1. Create secrets:
 ```bash
-git clone https://github.com/MichaelTrip/kubevirt-portal.git
-cd kubevirt-portal
+# Base64 encode your values
+echo -n "https://github.com/yourusername/vm-configs.git" | base64
+echo -n "your-username" | base64
+echo -n "your-token" | base64
 ```
 
-2. Deploy to your Kubernetes cluster:
-
-First, encode your secrets:
+2. Deploy the application:
 ```bash
-# Replace these with your actual values
-echo -n "https://github.com/yourusername/your-vm-configs.git" | base64
-echo -n "your-github-username" | base64
-echo -n "your-github-token" | base64
-echo -n "your-secret-key" | base64
-```
-
-Update the base64 encoded values in `kubernetes/secret.yaml` with your actual values.
-
-Then apply the Kubernetes manifests:
-```bash
-# Create namespace (optional)
-kubectl create namespace kubevirt-portal
-
-# Apply manifests
 kubectl apply -f kubernetes/configmap.yaml
 kubectl apply -f kubernetes/secret.yaml
 kubectl apply -f kubernetes/deployment.yaml
 kubectl apply -f kubernetes/service.yaml
-
-# Verify deployment
-kubectl get pods -l app=kubevirt-portal
-kubectl get svc kubevirt-portal
 ```
 
-To access the application:
-
-1. For testing, you can use port-forwarding:
+3. Access the portal:
 ```bash
-kubectl port-forward svc/kubevirt-portal 8080:80
-```
-Then access the portal at `http://localhost:8080`
-
-2. For production, set up an Ingress or LoadBalancer service according to your cluster configuration.
-
-## Usage
-
-Access the portal through your web browser:
-
-1. Start the application:
-```bash
-docker run -p 5000:5000 kubevirt-portal
+kubectl port-forward svc/kubevirt-portal 5000:80
 ```
 
-2. Open your browser and navigate to:
-```
-http://localhost:5000
-```
+### Local Development
 
-3. Use the web interface to:
-   - View list of VMs
-   - Create new VMs
-   - Edit existing VM configurations
-   - Delete VMs
-
-## Development
-
-### Setting up the Development Environment
-
-1. Create and activate a virtual environment:
+1. Set up environment:
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Linux/Mac
-# or
-.\venv\Scripts\activate  # On Windows
-```
-
-2. Install dependencies:
-```bash
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Set up environment variables:
-
-The following environment variables are required and should be set in your `.env` file or environment:
-
-Required variables:
-- `GIT_REPO_URL`: URL of the Git repository where VM configurations will be stored
-- `GIT_USERNAME`: Username for Git authentication
-- `GIT_TOKEN`: Authentication token for Git access
-
-Optional variables:
-- `SECRET_KEY`: Flask secret key (defaults to 'dev-secret-key')
-- `YAML_SUBDIRECTORY`: Directory within the Git repo where VM YAML files are stored (defaults to 'vms/')
-
-Example `.env` file:
+2. Configure environment variables:
 ```bash
-FLASK_APP=run.py
-FLASK_ENV=development
-GIT_REPO_URL=https://github.com/yourusername/your-vm-configs.git
-GIT_USERNAME=yourusername
-GIT_TOKEN=your-git-personal-access-token
-SECRET_KEY=your-secret-key
-YAML_SUBDIRECTORY=vms/
+export GIT_REPO_URL="https://github.com/your/repo.git"
+export GIT_USERNAME="username"
+export GIT_TOKEN="token"
+export YAML_SUBDIRECTORY="vms/"
 ```
 
-4. Start the development server:
+3. Run the application:
 ```bash
-flask run
+flask run --debug
 ```
 
-### Building the Docker Image
+## 🔧 Configuration
 
-1. Build the image:
-```bash
-docker build -t kubevirt-portal .
-```
+### Environment Variables
 
-2. Run the container:
-```bash
-docker run -p 5000:5000 kubevirt-portal
-```
+Required:
+- `GIT_REPO_URL`: VM configuration repository
+- `GIT_USERNAME`: Git authentication username
+- `GIT_TOKEN`: Git authentication token
 
-### Development Guidelines
+Optional:
+- `SECRET_KEY`: Flask secret key
+- `YAML_SUBDIRECTORY`: VM configuration directory (default: "vms/")
+- `FLASK_ENV`: Application environment
 
-1. Code Style
-   - Follow PEP 8 guidelines
-   - Use meaningful variable and function names
-   - Add docstrings to functions and classes
+### Resource Requirements
 
-2. Testing
-   - Write unit tests for new features
-   - Ensure all tests pass before submitting PR
-   - Run tests with: `python -m pytest`
+Default limits:
+- Memory: 512Mi
+- CPU: 500m
+- Storage: Based on PVC configuration
 
-3. Git Workflow
-   - Create feature branches from main
-   - Keep commits atomic and well-described
-   - Rebase on main before submitting PR
+## 🏗 Architecture
 
-## Contributing
+### Components
+- Flask web application
+- GitPython for repository management
+- Jinja2 templating engine
+- WTForms for form handling
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Key Files
+- `app/routes.py`: Web endpoints
+- `app/utils.py`: Git operations
+- `app/forms.py`: Form definitions
+- `kubernetes/*.yaml`: Deployment manifests
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-## License
+## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
-## Support
+## 💬 Support
 
-If you have any questions or need help with KubeVirt Portal, please open an issue in the GitHub repository.
+For support:
+1. Check existing GitHub issues
+2. Create a new issue with:
+   - Clear description
+   - Steps to reproduce
+   - Expected behavior
