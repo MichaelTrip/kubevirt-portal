@@ -1,6 +1,6 @@
 # KubeVirt Portal
 
-A web-based management interface for KubeVirt virtual machines in Kubernetes clusters.
+A web-based management interface for KubeVirt virtual machines in Kubernetes clusters. Built with Python and Flask.
 
 ## Overview
 
