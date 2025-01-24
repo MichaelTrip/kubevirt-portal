@@ -414,92 +414,44 @@ def generate_yaml(form_data):
     except Exception as e:
         logger.error(f"Error generating YAML: {str(e)}", exc_info=True)
         raise
-apiVersion: kubevirt.io/v1
-kind: VirtualMachine
-metadata:
-  name: {form_data['vm_name']}
-spec:
-  running: false
-  template:
-    metadata:
-      labels:
-        kubevirt.io/vm: {form_data['vm_name']}
-      annotations:
-        kubevirt.io/allow-pod-bridge-network-live-migration: "true"
-    spec:
-      evictionStrategy: LiveMigrate
-      domain:
-        cpu:
-          cores: {form_data['cpu_cores']}
-        resources:
-          requests:
-            memory: {form_data['memory']}G
-          limits:
-            memory: {form_data['memory']}G
-        devices:
-          disks:
-            - name: {form_data['vm_name']}-pvc
-              disk:
-                bus: virtio
-            - name: cloudinitdisk
-              disk:
-                bus: virtio
-          interfaces:
-            - name: podnet
-              masquerade: {{}}
-      networks:
-        - name: podnet
-          pod: {{}}
-      volumes:
-        - name: {form_data['vm_name']}-pvc
-          persistentVolumeClaim:
-            claimName: {form_data['vm_name']}-pvc
-        - name: cloudinitdisk
-          cloudInitNoCloud:
-            networkData: |
-              network:
-                version: 1
-                config:
-                  - type: physical
-                    name: enp1s0
-                    subnets:
-                      - type: dhcp
-                      - type: static6
-                        address: fd10:0:2::2/120
-                        gateway: fd10:0:2::1
+def generate_yaml(form_data):
+    """Generate YAML configuration using Jinja2 templates."""
+    logger.info(f"Generating YAML for VM: {form_data['vm_name']}")
+    try:
+        # Process user data
+        user_data = form_data['user_data'].strip()
+        if not user_data.startswith('#cloud-config'):
+            user_data = '#cloud-config\n' + user_data
 
-            userData: |-
-              {indented_user_data}"""
+        # Prepare template data
+        template_data = {
+            'vm_name': form_data['vm_name'],
+            'cpu_cores': form_data['cpu_cores'],
+            'memory': form_data['memory'],
+            'user_data': user_data,
+            'storage_size': form_data['storage_size'],
+            'storage_class': form_data['storage_class'],
+            'image_url': form_data['image_url'],
+            'hostname': form_data['hostname'],
+            'address_pool': form_data['address_pool'],
+            'service_ports': [
+                {
+                    'port_name': port['port_name'],
+                    'port': port['port'],
+                    'protocol': port['protocol'],
+                    'targetPort': port['targetPort']
+                }
+                for port in form_data['service_ports']
+            ]
+        }
 
-        # Process service ports
-        ports_yaml = []
-        for port_data in form_data['service_ports']:
-            port_yaml = f"""  - name: {port_data['port_name']}
-    port: {port_data['port']}
-    protocol: {port_data['protocol']}
-    targetPort: {port_data['targetPort']}"""
-            ports_yaml.append(port_yaml)
+        # Render templates
+        vm_template = jinja_env.get_template('vm.yaml.j2')
+        service_template = jinja_env.get_template('service.yaml.j2')
 
-        service_yaml = f"""---
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    metallb.universe.tf/address-pool: {form_data['address_pool']}
-    external-dns.alpha.kubernetes.io/hostname: {form_data['hostname']}
-  labels:
-    kubevirt.io/vm: {form_data['vm_name']}
-  name: {form_data['vm_name']}
-spec:
-  ipFamilyPolicy: PreferDualStack
-  externalTrafficPolicy: Local
-  ports:
-{chr(10).join(ports_yaml)}
-  selector:
-    kubevirt.io/vm: {form_data['vm_name']}
-  type: LoadBalancer
-status:
-  loadBalancer: {{}}"""
+        # Generate YAML content
+        vm_yaml = "---\n" + vm_template.render(template_data)
+        service_yaml = "---\n" + service_template.render(template_data)
 
         return vm_yaml + "\n" + service_yaml
 
