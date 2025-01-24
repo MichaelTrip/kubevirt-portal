@@ -1,2 +1,4 @@
 .env
 .aider*
+app.log
+app/__pycache__
