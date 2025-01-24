@@ -37,23 +37,79 @@ cd kubevirt-portal
 ## Usage
 
 Access the portal through your web browser:
+
+1. Start the application:
 ```bash
-# Usage instructions will be added here
+docker run -p 5000:5000 kubevirt-portal
 ```
+
+2. Open your browser and navigate to:
+```
+http://localhost:5000
+```
+
+3. Use the web interface to:
+   - View list of VMs
+   - Create new VMs
+   - Edit existing VM configurations
+   - Delete VMs
 
 ## Development
 
 ### Setting up the Development Environment
 
-1. Install dependencies:
+1. Create and activate a virtual environment:
 ```bash
-# Development setup instructions will be added here
+python -m venv venv
+source venv/bin/activate  # On Linux/Mac
+# or
+.\venv\Scripts\activate  # On Windows
 ```
 
-2. Start the development server:
+2. Install dependencies:
 ```bash
-# Development server instructions will be added here
+pip install -r requirements.txt
 ```
+
+3. Set up environment variables:
+```bash
+export FLASK_APP=run.py
+export FLASK_ENV=development
+```
+
+4. Start the development server:
+```bash
+flask run
+```
+
+### Building the Docker Image
+
+1. Build the image:
+```bash
+docker build -t kubevirt-portal .
+```
+
+2. Run the container:
+```bash
+docker run -p 5000:5000 kubevirt-portal
+```
+
+### Development Guidelines
+
+1. Code Style
+   - Follow PEP 8 guidelines
+   - Use meaningful variable and function names
+   - Add docstrings to functions and classes
+
+2. Testing
+   - Write unit tests for new features
+   - Ensure all tests pass before submitting PR
+   - Run tests with: `python -m pytest`
+
+3. Git Workflow
+   - Create feature branches from main
+   - Keep commits atomic and well-described
+   - Rebase on main before submitting PR
 
 ## Contributing
 
