@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -17,6 +16,10 @@ jobs:
       packages: write
 
     steps:
+      - name: Set image name
+        run: |
+          echo "IMAGE_NAME=$(echo ${{ github.repository_owner }}/kubevirt-portal | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
