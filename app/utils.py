@@ -3,8 +3,18 @@ import git
 import os
 import tempfile
 import logging
+from jinja2 import Environment, FileSystemLoader
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Initialize Jinja2 environment
+template_dir = Path(__file__).parent / 'templates'
+jinja_env = Environment(
+    loader=FileSystemLoader(template_dir),
+    trim_blocks=True,
+    lstrip_blocks=True
+)
 
 # def generate_yaml(form_data):
 #     logger.info(f"Generating YAML for VM: {form_data['vm_name']}")
@@ -361,21 +371,49 @@ logger = logging.getLogger(__name__)
 #         raise
 
 def generate_yaml(form_data):
+    """Generate YAML configuration using Jinja2 templates."""
     logger.info(f"Generating YAML for VM: {form_data['vm_name']}")
     try:
-        # Process user data to ensure proper indentation
-        user_data_raw = form_data['user_data'].strip()
-        if not user_data_raw.startswith('#cloud-config'):
-            user_data_raw = '#cloud-config\n' + user_data_raw
+        # Process user data
+        user_data = form_data['user_data'].strip()
+        if not user_data.startswith('#cloud-config'):
+            user_data = '#cloud-config\n' + user_data
 
-        # Split lines and indent properly
-        user_data_lines = user_data_raw.split('\n')
-        user_data_lines = [line for line in user_data_lines if line]  # Remove empty lines
-        indented_user_data = user_data_lines[0]  # First line (#cloud-config)
-        for line in user_data_lines[1:]:
-            indented_user_data += f"\n              {line}"
+        # Prepare template data
+        template_data = {
+            'vm_name': form_data['vm_name'],
+            'cpu_cores': form_data['cpu_cores'],
+            'memory': form_data['memory'],
+            'user_data': user_data,
+            'storage_size': form_data['storage_size'],
+            'storage_class': form_data['storage_class'],
+            'image_url': form_data['image_url'],
+            'hostname': form_data['hostname'],
+            'address_pool': form_data['address_pool'],
+            'service_ports': [
+                {
+                    'port_name': port['port_name'],
+                    'port': port['port'],
+                    'protocol': port['protocol'],
+                    'targetPort': port['targetPort']
+                }
+                for port in form_data['service_ports']
+            ]
+        }
 
-        vm_yaml = f"""---
+        # Render templates
+        vm_template = jinja_env.get_template('vm.yaml.j2')
+        service_template = jinja_env.get_template('service.yaml.j2')
+
+        # Generate YAML content
+        vm_yaml = "---\n" + vm_template.render(template_data)
+        service_yaml = "---\n" + service_template.render(template_data)
+
+        return vm_yaml + "\n" + service_yaml
+
+    except Exception as e:
+        logger.error(f"Error generating YAML: {str(e)}", exc_info=True)
+        raise
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
