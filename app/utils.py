@@ -156,6 +156,9 @@ def get_vm_list(config):
                                     'cpu': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
                                     'memory': memory,
                                     'hostname': service_config['metadata']['annotations'].get('external-dns.alpha.kubernetes.io/hostname', 'N/A'),
+                                    'storage': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'],
+                                    'image': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
+                                    'address_pool': service_config['metadata']['annotations'].get('metallb.universe.tf/address-pool', 'default')
                                 }
                                 vms.append(vm_info)
                                 logger.debug(f"Added VM to list: {vm_info['name']}")
