@@ -4,6 +4,12 @@ FROM python:3.13-slim
 # Set working directory
 WORKDIR /app
 
+# Install git and clean up apt cache
+RUN apt-get update && \
+    apt-get install -y git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
