@@ -60,21 +60,28 @@
         
         // Send credentials securely in first message
         ws.onopen = () => {
+            // Send authentication message first
             ws.send(JSON.stringify({
                 type: 'auth',
                 username: username,
                 password: password
             }));
         };
+
+        // Handle successful authentication
+        let authenticated = false;
         
-        ws.onopen = () => {
-            // Only remove login form after successful connection
-            loginForm.remove();
-            
-            // Set up terminal handlers after connection is established
-            term.onData(data => {
-                ws.send(data);
-            });
+        ws.onmessage = event => {
+            if (!authenticated && event.data === "\r\nConnected!\r\n") {
+                authenticated = true;
+                loginForm.remove();
+                
+                // Set up terminal handlers after authentication
+                term.onData(data => {
+                    ws.send(data);
+                });
+            }
+            term.write(event.data);
         };
 
         ws.onmessage = event => {
