@@ -52,7 +52,7 @@
     `;
     document.body.appendChild(loginForm);
 
-    document.getElementById('sshConnect').addEventListener('click', () => {
+    function connectSSH() {
         const username = document.getElementById('sshUsername').value;
         const password = document.getElementById('sshPassword').value;
         
