@@ -192,10 +192,10 @@ def get_vm_list(config):
                                 'name': vm_config['metadata']['name'],
                                 'cpu': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
                                 'memory': memory,
-                                'hostname': service_config['metadata']['annotations'].get('external-dns.alpha.kubernetes.io/hostname', 'N/A'),
+                                'hostname': service_config.get('metadata', {}).get('annotations', {}).get('external-dns.alpha.kubernetes.io/hostname', 'N/A'),
                                 'storage': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'],
                                 'image': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
-                                'address_pool': service_config['metadata']['annotations'].get('metallb.universe.tf/address-pool', 'default'),
+                                'address_pool': service_config.get('metadata', {}).get('annotations', {}).get('metallb.universe.tf/address-pool', 'default'),
                                 'tags': tags
                             }
                             vms.append(vm_info)
