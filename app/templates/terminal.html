@@ -25,7 +25,7 @@
     fitAddon.fit();
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/ws?host={{ host }}`);
+    const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/ws?host={{ host }}&username=${encodeURIComponent(prompt('Username:'))}&password=${encodeURIComponent(prompt('Password:'))}`);
 
     term.onData(data => {
         ws.send(data);
