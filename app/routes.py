@@ -208,9 +208,10 @@ def terminal(vm_name):
 
 
 def init_ssh_client():
-    """Initialize SSH client with default settings"""
+    """Initialize SSH client with password authentication only"""
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.get_transport
     return client
 
 @sock.route('/terminal/ws')
@@ -228,7 +229,15 @@ def ssh_websocket(ws):
     
     client = init_ssh_client()
     try:
-        client.connect(host, port, username=username, password=password, timeout=10)
+        client.connect(
+            host, 
+            port=port,
+            username=username,
+            password=password,
+            timeout=10,
+            allow_agent=False,
+            look_for_keys=False
+        )
         channel = client.invoke_shell()
     
         def send_data():
