@@ -30,12 +30,20 @@ def ensure_git_clone(config):
     os.makedirs(config.GIT_CLONE_DIR, exist_ok=True)
     
     # Construct the URL with authentication
-    auth_url = f"https://{config.GIT_USERNAME}:{config.GIT_TOKEN}@{config.GIT_REPO_URL.replace('https://', '')}"
+    repo_url = config.GIT_REPO_URL.rstrip('/')
+    if repo_url.startswith('https://'):
+        repo_url = repo_url[8:]  # Remove 'https://'
+    elif repo_url.startswith('http://'):
+        repo_url = repo_url[7:]  # Remove 'http://'
+    auth_url = f"https://{config.GIT_USERNAME}:{config.GIT_TOKEN}@{repo_url}"
     
     # Check if the repository is already cloned
     repo_path = os.path.join(config.GIT_CLONE_DIR, 'repo')
     
     try:
+        logger.debug(f"Checking Git repository at: {repo_path}")
+        logger.debug(f"Using authentication URL format: https://{config.GIT_USERNAME}:****@{repo_url}")
+        
         if os.path.exists(os.path.join(repo_path, '.git')):
             # Repository exists, pull latest changes
             logger.info("Updating existing repository")
