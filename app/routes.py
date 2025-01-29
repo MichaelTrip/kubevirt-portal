@@ -219,9 +219,16 @@ def ssh_websocket(ws):
     host = request.args.get('host')
     port = int(request.args.get('port', 22))
 
+    username = request.args.get('username')
+    password = request.args.get('password')
+    
+    if not username or not password:
+        ws.send("\r\nError: Username and password required\r\n")
+        return
+    
     client = init_ssh_client()
     try:
-        client.connect(host, port, timeout=10)
+        client.connect(host, port, username=username, password=password, timeout=10)
         channel = client.invoke_shell()
     
         def send_data():
