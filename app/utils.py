@@ -90,7 +90,8 @@ def generate_yaml(form_data, config):
                     'targetPort': port['targetPort']
                 }
                 for port in form_data['service_ports']
-            ]
+            ],
+            'service_type': form_data.get('service_type', 'LoadBalancer')
         }
 
         # Render templates
