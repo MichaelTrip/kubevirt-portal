@@ -3,6 +3,7 @@ import git
 import os
 import tempfile
 import logging
+import shutil
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
@@ -15,6 +16,42 @@ jinja_env = Environment(
     trim_blocks=True,
     lstrip_blocks=True
 )
+
+# Persistent clone location - read from environment variable with fallback
+CLONE_DIR = os.environ.get('GIT_CLONE_DIR', '/app/storage/clones')
+logger.info(f"Using Git clone directory: {CLONE_DIR}")
+
+def ensure_git_clone(config):
+    """
+    Ensure a persistent clone of the Git repository exists.
+    If the clone doesn't exist or is outdated, clone/update it.
+    """
+    logger.info("Ensuring Git repository is cloned")
+    
+    # Create the storage directory if it doesn't exist
+    os.makedirs(CLONE_DIR, exist_ok=True)
+    
+    # Construct the URL with authentication
+    auth_url = f"https://{config.GIT_USERNAME}:{config.GIT_TOKEN}@{config.GIT_REPO_URL.replace('https://', '')}"
+    
+    # Check if the repository is already cloned
+    repo_path = os.path.join(CLONE_DIR, 'repo')
+    
+    try:
+        if os.path.exists(os.path.join(repo_path, '.git')):
+            # Repository exists, pull latest changes
+            logger.info("Updating existing repository")
+            repo = git.Repo(repo_path)
+            repo.remotes.origin.pull()
+        else:
+            # Clone the repository
+            logger.info("Cloning repository")
+            git.Repo.clone_from(auth_url, repo_path)
+        
+        return repo_path
+    except Exception as e:
+        logger.error(f"Error ensuring Git clone: {str(e)}")
+        raise
 
 def generate_yaml(form_data):
     """Generate YAML configuration using Jinja2 templates."""
@@ -62,51 +99,44 @@ def generate_yaml(form_data):
         logger.error(f"Error generating YAML: {str(e)}", exc_info=True)
         raise
 
-
 def commit_to_git(yaml_content, vm_name, subdirectory, git_config):
     logger.info(f"Starting Git commit process for VM: {vm_name}")
     try:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            logger.debug(f"Created temporary directory: {temp_dir}")
+        # Use the persistent clone directory
+        repo_path = os.path.join(CLONE_DIR, 'repo')
+        
+        # Ensure the repository is up to date
+        repo = git.Repo(repo_path)
+        repo.remotes.origin.pull()
 
-            # Construct the URL with authentication
-            auth_url = f"https://{git_config['username']}:{git_config['token']}@{git_config['repo_url'].replace('https://', '')}"
-            logger.info(f"Cloning repository using authenticated URL")
+        # Create subdirectory path inside the repository
+        yaml_path = os.path.join(repo_path, subdirectory)
+        os.makedirs(yaml_path, exist_ok=True)
+        logger.debug(f"Created directory: {yaml_path}")
 
-            # Clone the repository
-            repo = git.Repo.clone_from(
-                auth_url,
-                temp_dir
-            )
+        # Write YAML file to the correct path
+        file_path = os.path.join(yaml_path, f'{vm_name}.yaml')
+        with open(file_path, 'w') as f:
+            f.write(yaml_content)
+        logger.info(f"Written YAML file to: {file_path}")
 
-            # Create subdirectory path inside the temporary directory
-            yaml_path = os.path.join(temp_dir, subdirectory)
-            os.makedirs(yaml_path, exist_ok=True)
-            logger.debug(f"Created directory: {yaml_path}")
+        # Add the file using the relative path
+        relative_file_path = os.path.join(subdirectory, f'{vm_name}.yaml')
+        repo.index.add([relative_file_path])
 
-            # Write YAML file to the correct path
-            file_path = os.path.join(yaml_path, f'{vm_name}.yaml')
-            with open(file_path, 'w') as f:
-                f.write(yaml_content)
-            logger.info(f"Written YAML file to: {file_path}")
+        # Create commit
+        commit = repo.index.commit(f'Add VM configuration for {vm_name} in {subdirectory}')
+        logger.info(f"Created commit: {commit.hexsha}")
 
-            # Add the file using the relative path
-            relative_file_path = os.path.join(subdirectory, f'{vm_name}.yaml')
-            repo.index.add([relative_file_path])
+        # Push changes
+        logger.info("Pushing changes to remote repository")
+        push_info = repo.remote().push()
 
-            # Create commit
-            commit = repo.index.commit(f'Add VM configuration for {vm_name} in {subdirectory}')
-            logger.info(f"Created commit: {commit.hexsha}")
-
-            # Push changes
-            logger.info("Pushing changes to remote repository")
-            push_info = repo.remote().push()
-
-            # Log push result
-            for info in push_info:
-                if info.flags & info.ERROR:
-                    raise git.GitCommandError("push", f"Failed to push to remote: {info.summary}")
-                logger.info(f"Push successful: {info.summary}")
+        # Log push result
+        for info in push_info:
+            if info.flags & info.ERROR:
+                raise git.GitCommandError("push", f"Failed to push to remote: {info.summary}")
+            logger.info(f"Push successful: {info.summary}")
 
     except git.GitCommandError as e:
         logger.error(f"Git error: {str(e)}")
@@ -119,64 +149,58 @@ def get_vm_list(config):
     """Get list of VMs from Git repository."""
     logger.info("Starting to fetch VM list")
     try:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            logger.debug(f"Created temporary directory: {temp_dir}")
+        # Ensure repository is cloned and up to date
+        repo_path = ensure_git_clone(config)
 
-            # Construct the URL with authentication
-            auth_url = f"https://{config.GIT_USERNAME}:{config.GIT_TOKEN}@{config.GIT_REPO_URL.replace('https://', '')}"
-            logger.info("Cloning repository")
+        vm_dir = os.path.join(repo_path, config.YAML_SUBDIRECTORY)
+        logger.debug(f"Looking for VMs in directory: {vm_dir}")
 
-            repo = git.Repo.clone_from(auth_url, temp_dir)
+        if not os.path.exists(vm_dir):
+            logger.warning(f"Directory {vm_dir} does not exist")
+            return []
 
-            vm_dir = os.path.join(temp_dir, config.YAML_SUBDIRECTORY)
-            logger.debug(f"Looking for VMs in directory: {vm_dir}")
+        vms = []
+        for file in os.listdir(vm_dir):
+            if file.endswith('.yaml'):
+                file_path = os.path.join(vm_dir, file)
+                logger.debug(f"Processing file: {file_path}")
 
-            if not os.path.exists(vm_dir):
-                logger.warning(f"Directory {vm_dir} does not exist")
-                return []
+                try:
+                    with open(file_path, 'r') as f:
+                        content = f.read()
+                        docs = list(yaml.safe_load_all(content))
+                        if docs and len(docs) >= 2:  # Ensure we have both VM and Service configs
+                            vm_config = docs[0]  # First document is VM config
+                            service_config = docs[1]  # Second document is Service config
 
-            vms = []
-            for file in os.listdir(vm_dir):
-                if file.endswith('.yaml'):
-                    file_path = os.path.join(vm_dir, file)
-                    logger.debug(f"Processing file: {file_path}")
+                            # Extract memory value and convert to standard format
+                            memory = vm_config['spec']['template']['spec']['domain']['resources']['requests']['memory']
 
-                    try:
-                        with open(file_path, 'r') as f:
-                            content = f.read()
-                            docs = list(yaml.safe_load_all(content))
-                            if docs and len(docs) >= 2:  # Ensure we have both VM and Service configs
-                                vm_config = docs[0]  # First document is VM config
-                                service_config = docs[1]  # Second document is Service config
+                            # Extract tags from labels
+                            tags = []
+                            labels = vm_config['spec']['template']['metadata']['labels']
+                            for key, value in labels.items():
+                                if key != 'kubevirt.io/vm':  # Skip the default label
+                                    tags.append({'key': key, 'value': value})
 
-                                # Extract memory value and convert to standard format
-                                memory = vm_config['spec']['template']['spec']['domain']['resources']['requests']['memory']
+                            vm_info = {
+                                'name': vm_config['metadata']['name'],
+                                'cpu': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
+                                'memory': memory,
+                                'hostname': service_config['metadata']['annotations'].get('external-dns.alpha.kubernetes.io/hostname', 'N/A'),
+                                'storage': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'],
+                                'image': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
+                                'address_pool': service_config['metadata']['annotations'].get('metallb.universe.tf/address-pool', 'default'),
+                                'tags': tags
+                            }
+                            vms.append(vm_info)
+                            logger.debug(f"Added VM to list: {vm_info['name']}")
+                except Exception as e:
+                    logger.error(f"Error processing file {file}: {str(e)}")
+                    continue
 
-                                # Extract tags from labels
-                                tags = []
-                                labels = vm_config['spec']['template']['metadata']['labels']
-                                for key, value in labels.items():
-                                    if key != 'kubevirt.io/vm':  # Skip the default label
-                                        tags.append({'key': key, 'value': value})
-
-                                vm_info = {
-                                    'name': vm_config['metadata']['name'],
-                                    'cpu': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
-                                    'memory': memory,
-                                    'hostname': service_config['metadata']['annotations'].get('external-dns.alpha.kubernetes.io/hostname', 'N/A'),
-                                    'storage': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'],
-                                    'image': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
-                                    'address_pool': service_config['metadata']['annotations'].get('metallb.universe.tf/address-pool', 'default'),
-                                    'tags': tags
-                                }
-                                vms.append(vm_info)
-                                logger.debug(f"Added VM to list: {vm_info['name']}")
-                    except Exception as e:
-                        logger.error(f"Error processing file {file}: {str(e)}")
-                        continue
-
-            logger.info(f"Found {len(vms)} VMs")
-            return vms
+        logger.info(f"Found {len(vms)} VMs")
+        return vms
 
     except Exception as e:
         logger.error(f"Error getting VM list: {str(e)}")
@@ -184,58 +208,58 @@ def get_vm_list(config):
 
 def get_vm_config(config, vm_name):
     """Get VM configuration from Git repository."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        auth_url = f"https://{config.GIT_USERNAME}:{config.GIT_TOKEN}@{config.GIT_REPO_URL.replace('https://', '')}"
-        repo = git.Repo.clone_from(auth_url, temp_dir)
+    # Ensure repository is cloned and up to date
+    repo_path = ensure_git_clone(config)
 
-        file_path = os.path.join(temp_dir, config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
-        with open(file_path, 'r') as f:
-            content = f.read()
-            docs = list(yaml.safe_load_all(content))
-            vm_config = docs[0]
-            service_config = docs[1]
+    file_path = os.path.join(repo_path, config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
+    with open(file_path, 'r') as f:
+        content = f.read()
+        docs = list(yaml.safe_load_all(content))
+        vm_config = docs[0]
+        service_config = docs[1]
 
-            # Extract tags from labels
-            tags = []
-            labels = vm_config['spec']['template']['metadata']['labels']
-            for key, value in labels.items():
-                if key != 'kubevirt.io/vm':  # Skip the default label
-                    tags.append({'key': key, 'value': value})
+        # Extract tags from labels
+        tags = []
+        labels = vm_config['spec']['template']['metadata']['labels']
+        for key, value in labels.items():
+            if key != 'kubevirt.io/vm':  # Skip the default label
+                tags.append({'key': key, 'value': value})
 
-            return {
-                'vm_name': vm_config['metadata']['name'],
-                'tags': tags,
-                'cpu_cores': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
-                'memory': int(vm_config['spec']['template']['spec']['domain']['resources']['requests']['memory'].rstrip('G')),
-                'storage_size': int(vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'].rstrip('Gi')),
-                'storage_class': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['storageClassName'],
-                'image_url': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
-                'user_data': vm_config['spec']['template']['spec']['volumes'][1]['cloudInitNoCloud']['userData'],
-                'hostname': service_config['metadata']['annotations']['external-dns.alpha.kubernetes.io/hostname'],
-                'address_pool': service_config['metadata']['annotations']['metallb.universe.tf/address-pool'],
-                'service_ports': [
-                    {
-                        'port_name': port['name'],  # Changed from 'name' to 'port_name' to match form field
-                        'port': port['port'],
-                        'protocol': port['protocol'],
-                        'targetPort': port['targetPort']
-                    }
-                    for port in service_config['spec']['ports']
-                ]
-            }
+        return {
+            'vm_name': vm_config['metadata']['name'],
+            'tags': tags,
+            'cpu_cores': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
+            'memory': int(vm_config['spec']['template']['spec']['domain']['resources']['requests']['memory'].rstrip('G')),
+            'storage_size': int(vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'].rstrip('Gi')),
+            'storage_class': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['storageClassName'],
+            'image_url': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
+            'user_data': vm_config['spec']['template']['spec']['volumes'][1]['cloudInitNoCloud']['userData'],
+            'hostname': service_config['metadata']['annotations']['external-dns.alpha.kubernetes.io/hostname'],
+            'address_pool': service_config['metadata']['annotations']['metallb.universe.tf/address-pool'],
+            'service_ports': [
+                {
+                    'port_name': port['name'],  # Changed from 'name' to 'port_name' to match form field
+                    'port': port['port'],
+                    'protocol': port['protocol'],
+                    'targetPort': port['targetPort']
+                }
+                for port in service_config['spec']['ports']
+            ]
+        }
 
 def delete_vm_config(config, vm_name):
     """Delete VM configuration from Git repository."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        auth_url = f"https://{config.GIT_USERNAME}:{config.GIT_TOKEN}@{config.GIT_REPO_URL.replace('https://', '')}"
-        repo = git.Repo.clone_from(auth_url, temp_dir)
-
-        file_path = os.path.join(temp_dir, config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            repo.index.remove([os.path.join(config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")])
-            repo.index.commit(f"Delete VM configuration for {vm_name}")
-            repo.remote().push()
+    # Ensure repository is cloned and up to date
+    repo_path = ensure_git_clone(config)
+    
+    repo = git.Repo(repo_path)
+    file_path = os.path.join(repo_path, config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
+    
+if os.path.exists(file_path):
+        os.remove(file_path)
+        repo.index.remove([os.path.join(config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")])
+        repo.index.commit(f"Delete VM configuration for {vm_name}")
+        repo.remote().push()
 
 def update_vm_config(config, vm_name, form_data):
     """Update VM configuration in Git repository."""
@@ -246,4 +270,3 @@ def update_vm_config(config, vm_name, form_data):
         'token': config.GIT_TOKEN
     }
     commit_to_git(yaml_content, vm_name, config.YAML_SUBDIRECTORY, git_config)
-
