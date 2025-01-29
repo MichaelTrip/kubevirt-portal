@@ -104,7 +104,7 @@ def create_vm():
         if form.errors:
             logger.error(f"Form validation errors: {form.errors}")
 
-    return render_template('create_vm.html', form=form)
+    return render_template('create_vm.html', form=form, config=Config)
 
 @main.route('/edit/<vm_name>', methods=['GET', 'POST'])
 def edit_vm(vm_name):
@@ -112,7 +112,7 @@ def edit_vm(vm_name):
         if request.method == 'GET':
             vm_config = get_vm_config(Config, vm_name)
             form = VMForm(data=vm_config)
-            return render_template('edit_vm.html', form=form, vm_name=vm_name)
+            return render_template('edit_vm.html', form=form, vm_name=vm_name, config=Config)
 
         form = VMForm()
         if form.validate_on_submit():

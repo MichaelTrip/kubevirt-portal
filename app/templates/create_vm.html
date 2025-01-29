@@ -54,10 +54,12 @@ users:
     groups: sudo
     shell: /bin/bash") }}
     </div>
+    {% if config.EXTERNAL_DNS_ENABLED %}
     <div class="mb-3">
         <label class="form-label">Hostname</label>
-        {{ form.hostname(class="form-control") }}
+        {{ form.hostname(class="form-control", placeholder="Optional - Only used if ExternalDNS is configured") }}
     </div>
+    {% endif %}
     <div class="mb-3">
         <label class="form-label">Service Type</label>
         {{ form.service_type(class="form-control") }}
