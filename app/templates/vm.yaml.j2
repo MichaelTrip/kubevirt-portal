@@ -61,7 +61,7 @@ spec:
                         gateway: fd10:0:2::1
             {% if user_data and user_data.strip() %}
             userData: |-
-              {{ user_data }}
+{{ user_data | indent(14, True) }}
             {% endif %}
   dataVolumeTemplates:
     - metadata:
