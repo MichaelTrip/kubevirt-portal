@@ -17,12 +17,12 @@ spec:
   ipFamilyPolicy: PreferDualStack
   externalTrafficPolicy: Local
   ports:
-  {%- for port in service_ports %}
+{%- for port in service_ports %}
   - name: {{ port.port_name }}
     port: {{ port.port }}
     protocol: {{ port.protocol }}
     targetPort: {{ port.targetPort }}
-  {%- endfor %}
+{%- endfor %}
   selector:
     kubevirt.io/vm: {{ vm_name }}
   type: LoadBalancer
