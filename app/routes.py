@@ -77,10 +77,10 @@ def create_vm():
             logger.info(f"Processed service ports: {service_ports_data}")
 
             if 'preview' in request.form:
-                yaml_content = generate_yaml(form_data)
+                yaml_content = generate_yaml(form_data, Config)
                 return render_template('create_vm.html', form=form, preview_yaml=yaml_content)
 
-            yaml_content = generate_yaml(form_data)
+            yaml_content = generate_yaml(form_data, Config)
 
             git_config = {
                 'repo_url': Config.GIT_REPO_URL,
@@ -150,7 +150,7 @@ def edit_vm(vm_name):
             }
 
             if 'preview' in request.form:
-                yaml_content = generate_yaml(form_data)
+                yaml_content = generate_yaml(form_data, Config)
                 return render_template('edit_vm.html', form=form, vm_name=vm_name, preview_yaml=yaml_content)
 
             yaml_content = generate_yaml(form_data, Config)
