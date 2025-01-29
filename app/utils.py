@@ -65,8 +65,8 @@ def generate_yaml(form_data, config):
     logger.info(f"Generating YAML for VM: {form_data['vm_name']}")
     try:
         # Process user data
-        user_data = form_data['user_data'].strip()
-        if not user_data.startswith('#cloud-config'):
+        user_data = form_data['user_data'].strip() if form_data.get('user_data') else ''
+        if user_data and not user_data.startswith('#cloud-config'):
             user_data = '#cloud-config\n' + user_data
 
         # Prepare template data
