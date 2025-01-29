@@ -73,7 +73,9 @@
                     
                     <div class="small text-muted mb-3">
                         <div><i class="bi bi-box me-2"></i>Image: {{ vm.image.split('/')[-1] }}</div>
+                        {% if config.METALLB_ENABLED %}
                         <div><i class="bi bi-diagram-2 me-2"></i>Network Pool: {{ vm.address_pool }}</div>
+                        {% endif %}
                         {% if vm.tags %}
                         <div class="mt-2">
                             <i class="bi bi-tags me-2"></i>Tags:

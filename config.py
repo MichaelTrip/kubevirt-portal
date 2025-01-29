@@ -20,6 +20,7 @@ class Config:
     
     # Feature flags
     EXTERNAL_DNS_ENABLED = os.getenv('EXTERNAL_DNS_ENABLED', 'false').lower() == 'true'
+    METALLB_ENABLED = os.getenv('METALLB_ENABLED', 'false').lower() == 'true'
 
     def __init__(self):
         # Validate immediately during initialization

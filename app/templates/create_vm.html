@@ -64,10 +64,12 @@ users:
         <label class="form-label">Service Type</label>
         {{ form.service_type(class="form-control") }}
     </div>
+    {% if config.METALLB_ENABLED %}
     <div class="mb-3">
         <label class="form-label">Address Pool</label>
         {{ form.address_pool(class="form-control", placeholder="Optional - Required for LoadBalancer type") }}
     </div>
+    {% endif %}
 
     <div class="mb-3">
         <label class="form-label">Tags</label>
