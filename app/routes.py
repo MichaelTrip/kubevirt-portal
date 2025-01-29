@@ -31,6 +31,8 @@ def vm_list():
 @main.route('/create', methods=['GET', 'POST'])
 def create_vm():
     form = VMForm()
+    if request.method == 'GET':
+        form.subdirectory.data = Config.YAML_SUBDIRECTORY
     if form.validate_on_submit():
         try:
             # Debug logging for service ports
