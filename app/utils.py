@@ -211,22 +211,41 @@ def get_vm_config(config, vm_name):
     # Ensure repository is cloned and up to date
     repo_path = ensure_git_clone(config)
 
+    # Log all relevant paths and configuration
+    logger.info(f"Repository Path: {repo_path}")
+    logger.info(f"YAML_SUBDIRECTORY: {config.YAML_SUBDIRECTORY}")
+    logger.info(f"Attempting to find VM: {vm_name}")
+
     # Construct the full file path
     file_path = os.path.join(repo_path, config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
     
     # Log the exact path we're trying to access
     logger.info(f"Attempting to read VM config from: {file_path}")
     
-    # Check if the file exists
-    if not os.path.exists(file_path):
-        # Log all files in the directory to help diagnose the issue
-        try:
-            existing_files = os.listdir(os.path.join(repo_path, config.YAML_SUBDIRECTORY))
-            logger.error(f"File not found. Existing files in directory: {existing_files}")
-        except Exception as e:
-            logger.error(f"Error listing directory contents: {str(e)}")
-        
-        raise FileNotFoundError(f"VM configuration file not found for {vm_name}")
+    # Check if the directory exists
+    subdirectory_path = os.path.join(repo_path, config.YAML_SUBDIRECTORY)
+    if not os.path.exists(subdirectory_path):
+        logger.error(f"Subdirectory does not exist: {subdirectory_path}")
+        logger.error(f"Contents of repository path: {os.listdir(repo_path)}")
+        raise FileNotFoundError(f"Subdirectory {config.YAML_SUBDIRECTORY} not found in repository")
+
+    # List all files in the subdirectory
+    try:
+        existing_files = os.listdir(subdirectory_path)
+        logger.info(f"Files in subdirectory: {existing_files}")
+    except Exception as e:
+        logger.error(f"Error listing directory contents: {str(e)}")
+
+    # Check for case-insensitive match
+    matching_files = [f for f in existing_files if f.lower() == f"{vm_name}.yaml".lower()]
+    
+    if matching_files:
+        # Use the first matching file (case-insensitive)
+        actual_filename = matching_files[0]
+        file_path = os.path.join(subdirectory_path, actual_filename)
+        logger.info(f"Found file with case-insensitive match: {file_path}")
+    else:
+        raise FileNotFoundError(f"No configuration file found for VM: {vm_name}")
 
     with open(file_path, 'r') as f:
         content = f.read()
