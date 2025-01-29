@@ -153,7 +153,7 @@
                             <button type="button" class="btn btn-sm btn-outline-info view-service-yaml" data-service-name="{{ vm.name }}">
                                 <i class="bi bi-code-square me-1"></i>View Service YAML
                             </button>
-                            {% if vm.service.ports and vm.service.external_ips %}
+                            {% if vm.service.ports and vm.service.external_ips and vm.user_data and 'ssh_pwauth: true' in vm.user_data %}
                                 {% set ns = namespace(found=false) %}
                                 {% for port in vm.service.ports %}
                                     {% if port.port == 22 and not ns.found %}
