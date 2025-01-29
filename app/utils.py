@@ -60,7 +60,7 @@ def ensure_git_clone(config):
         logger.error(f"Error ensuring Git clone: {str(e)}")
         raise
 
-def generate_yaml(form_data):
+def generate_yaml(form_data, config):
     """Generate YAML configuration using Jinja2 templates."""
     logger.info(f"Generating YAML for VM: {form_data['vm_name']}")
     try:
@@ -71,6 +71,7 @@ def generate_yaml(form_data):
 
         # Prepare template data
         template_data = {
+            'config': config,
             'vm_name': form_data['vm_name'],
             'cpu_cores': form_data['cpu_cores'],
             'memory': form_data['memory'],
@@ -270,7 +271,7 @@ def get_vm_config(config, vm_name):
 def update_vm_config(config, vm_name, form_data):
     """Update VM configuration in Git repository."""
     # Generate YAML content
-    yaml_content = generate_yaml(form_data)
+    yaml_content = generate_yaml(form_data, Config)
     
     # Prepare Git configuration
     git_config = {

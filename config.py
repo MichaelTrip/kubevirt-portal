@@ -17,6 +17,9 @@ class Config:
     
     # Git clone directory
     GIT_CLONE_DIR = os.getenv('GIT_CLONE_DIR', '/app/storage/clones')
+    
+    # Feature flags
+    EXTERNAL_DNS_ENABLED = os.getenv('EXTERNAL_DNS_ENABLED', 'false').lower() == 'true'
 
     def __init__(self):
         # Validate immediately during initialization
