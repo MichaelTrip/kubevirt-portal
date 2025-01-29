@@ -59,8 +59,10 @@ spec:
                       - type: static6
                         address: fd10:0:2::2/120
                         gateway: fd10:0:2::1
+            {% if user_data %}
             userData: |-
-              {{ user_data if user_data else '#cloud-config' }}
+              {{ user_data }}
+            {% endif %}
   dataVolumeTemplates:
     - metadata:
         name: {{ vm_name }}-pvc
