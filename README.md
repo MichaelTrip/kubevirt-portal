@@ -2,7 +2,7 @@
 
 # 🚀 KubeVirt Portal
 
-### Git-Backed Virtual Machine Management for KubeVirt
+### Git-Backed Virtual Machine Management for KubeVirt with Web Terminal
 
 [![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/flask-v2.3.3-green.svg)](https://flask.palletsprojects.com/)
@@ -31,6 +31,8 @@ KubeVirt Portal is a modern web application that combines KubeVirt with Git-base
 - **Template System**: Jinja2-powered YAML generation
 - **Resource Management**: CPU, memory, and storage allocation
 - **Network Configuration**: Service ports and MetalLB integration
+- **Web Terminal**: Built-in SSH access to VMs
+- **Power Management**: Start/stop VMs directly from the UI
 
 ### 💻 VM Configuration
 - CPU allocation (1-16 cores)
@@ -43,6 +45,10 @@ KubeVirt Portal is a modern web application that combines KubeVirt with Git-base
   - Custom hostnames
   - Service port mapping
   - Protocol selection (TCP/UDP)
+  - Web-based SSH terminal
+- Power management
+  - Start/stop controls
+  - Status monitoring
 - Cloud-init integration
 
 ### 🛠 Technical Features
