@@ -173,33 +173,50 @@ def get_vm_list(config):
                 try:
                     with open(file_path, 'r') as f:
                         content = f.read()
-                        docs = list(yaml.safe_load_all(content))
-                        if docs and len(docs) >= 2:  # Ensure we have both VM and Service configs
-                            vm_config = docs[0]  # First document is VM config
-                            service_config = docs[1]  # Second document is Service config
+                        try:
+                            docs = list(yaml.safe_load_all(content))
+                            if docs and len(docs) >= 2:  # Ensure we have both VM and Service configs
+                                vm_config = docs[0]  # First document is VM config
+                                service_config = docs[1]  # Second document is Service config
 
-                            # Extract memory value and convert to standard format
-                            memory = vm_config['spec']['template']['spec']['domain']['resources']['requests']['memory']
+                                if not isinstance(vm_config, dict) or not isinstance(service_config, dict):
+                                    logger.error(f"Invalid YAML structure in {file}: VM or Service config is not a dictionary")
+                                    continue
 
-                            # Extract tags from labels
-                            tags = []
-                            labels = vm_config['spec']['template']['metadata']['labels']
-                            for key, value in labels.items():
-                                if key != 'kubevirt.io/vm':  # Skip the default label
-                                    tags.append({'key': key, 'value': value})
+                                try:
+                                    # Safely get nested values with defaults
+                                    memory = vm_config.get('spec', {}).get('template', {}).get('spec', {}).get('domain', {}).get('resources', {}).get('requests', {}).get('memory', 'N/A')
+                                    cpu_cores = vm_config.get('spec', {}).get('template', {}).get('spec', {}).get('domain', {}).get('cpu', {}).get('cores', 'N/A')
+                                    storage = vm_config.get('spec', {}).get('dataVolumeTemplates', [{}])[0].get('spec', {}).get('storage', {}).get('resources', {}).get('requests', {}).get('storage', 'N/A')
+                                    image_url = vm_config.get('spec', {}).get('dataVolumeTemplates', [{}])[0].get('spec', {}).get('source', {}).get('http', {}).get('url', 'N/A')
+                                    
+                                    # Extract tags from labels
+                                    tags = []
+                                    labels = vm_config.get('spec', {}).get('template', {}).get('metadata', {}).get('labels', {})
+                                    for key, value in labels.items():
+                                        if key != 'kubevirt.io/vm':  # Skip the default label
+                                            tags.append({'key': key, 'value': value})
 
-                            vm_info = {
-                                'name': vm_config['metadata']['name'],
-                                'cpu': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
-                                'memory': memory,
-                                'hostname': service_config.get('metadata', {}).get('annotations', {}).get('external-dns.alpha.kubernetes.io/hostname', 'N/A'),
-                                'storage': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'],
-                                'image': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
-                                'address_pool': service_config.get('metadata', {}).get('annotations', {}).get('metallb.universe.tf/address-pool', 'default'),
-                                'tags': tags
-                            }
-                            vms.append(vm_info)
-                            logger.debug(f"Added VM to list: {vm_info['name']}")
+                                    vm_info = {
+                                        'name': vm_config.get('metadata', {}).get('name', 'Unknown'),
+                                        'cpu': cpu_cores,
+                                        'memory': memory,
+                                        'hostname': service_config.get('metadata', {}).get('annotations', {}).get('external-dns.alpha.kubernetes.io/hostname', 'N/A'),
+                                        'storage': storage,
+                                        'image': image_url,
+                                        'address_pool': service_config.get('metadata', {}).get('annotations', {}).get('metallb.universe.tf/address-pool', 'default'),
+                                        'tags': tags
+                                    }
+                                    vms.append(vm_info)
+                                    logger.debug(f"Added VM to list: {vm_info['name']}")
+                                except Exception as e:
+                                    logger.error(f"Error extracting VM details from {file}: {str(e)}")
+                                    continue
+                            else:
+                                logger.warning(f"Skipping {file}: Invalid number of YAML documents")
+                        except yaml.YAMLError as e:
+                            logger.error(f"Error parsing YAML in {file}: {str(e)}")
+                            continue
                 except Exception as e:
                     logger.error(f"Error processing file {file}: {str(e)}")
                     continue
