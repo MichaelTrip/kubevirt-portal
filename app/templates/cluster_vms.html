@@ -154,12 +154,13 @@
                                 <i class="bi bi-code-square me-1"></i>View Service YAML
                             </button>
                             {% if vm.service.ports and vm.service.external_ips %}
+                                {% set ns = namespace(found=false) %}
                                 {% for port in vm.service.ports %}
-                                    {% if port.port == 22 %}
+                                    {% if port.port == 22 and not ns.found %}
+                                        {% set ns.found = true %}
                                         <a href="{{ url_for('main.terminal', vm_name=vm.name, host=vm.service.external_ips[0]) }}" class="btn btn-sm btn-outline-success" target="_blank">
                                             <i class="bi bi-terminal me-1"></i>Web SSH
                                         </a>
-                                        {% break %}
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}
