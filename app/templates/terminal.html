@@ -17,11 +17,7 @@
             background: '#000000',
             foreground: '#ffffff'
         }
-    }
-
-    // Handle form submission (both button click and Enter key)
-    document.getElementById('sshLoginForm').addEventListener('submit', connectSSH);
-    document.getElementById('sshConnect').addEventListener('click', connectSSH);
+    });
     const fitAddon = new FitAddon.FitAddon();
     term.loadAddon(fitAddon);
     
@@ -52,7 +48,10 @@
     `;
     document.body.appendChild(loginForm);
 
-    function connectSSH() {
+    function connectSSH(event) {
+        if (event) {
+            event.preventDefault();
+        }
         const username = document.getElementById('sshUsername').value;
         const password = document.getElementById('sshPassword').value;
         
@@ -103,6 +102,12 @@
             console.error('WebSocket error:', error);
             term.write('\r\nWebSocket error occurred\r\n');
         };
+    }
+
+    // Add event listeners after DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('sshLoginForm').addEventListener('submit', connectSSH);
+        document.getElementById('sshConnect').addEventListener('click', connectSSH);
     });
 
     // Handle window resize
