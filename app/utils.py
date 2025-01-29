@@ -211,7 +211,23 @@ def get_vm_config(config, vm_name):
     # Ensure repository is cloned and up to date
     repo_path = ensure_git_clone(config)
 
+    # Construct the full file path
     file_path = os.path.join(repo_path, config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
+    
+    # Log the exact path we're trying to access
+    logger.info(f"Attempting to read VM config from: {file_path}")
+    
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        # Log all files in the directory to help diagnose the issue
+        try:
+            existing_files = os.listdir(os.path.join(repo_path, config.YAML_SUBDIRECTORY))
+            logger.error(f"File not found. Existing files in directory: {existing_files}")
+        except Exception as e:
+            logger.error(f"Error listing directory contents: {str(e)}")
+        
+        raise FileNotFoundError(f"VM configuration file not found for {vm_name}")
+
     with open(file_path, 'r') as f:
         content = f.read()
         docs = list(yaml.safe_load_all(content))
@@ -266,10 +282,19 @@ def delete_vm_config(config, vm_name):
 
 def update_vm_config(config, vm_name, form_data):
     """Update VM configuration in Git repository."""
+    # Log the incoming data for debugging
+    logger.info(f"Updating VM configuration for: {vm_name}")
+    logger.info(f"Subdirectory: {config.YAML_SUBDIRECTORY}")
+    
+    # Generate YAML content
     yaml_content = generate_yaml(form_data)
+    
+    # Prepare Git configuration
     git_config = {
         'repo_url': config.GIT_REPO_URL,
         'username': config.GIT_USERNAME,
         'token': config.GIT_TOKEN
     }
+    
+    # Commit to Git
     commit_to_git(yaml_content, vm_name, config.YAML_SUBDIRECTORY, git_config)
