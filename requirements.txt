@@ -7,6 +7,8 @@ python-dotenv==1.0.0
 gunicorn==21.2.0
 Jinja2>=3.0.0
 kubernetes==28.1.0
+flask-sock==0.7.0
+paramiko==3.4.0
 proto-plus>=1.22.3
 docutils<0.21
 sphinx<8,>=5
