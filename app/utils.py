@@ -6,6 +6,7 @@ import logging
 import shutil
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -108,8 +109,8 @@ def generate_yaml(form_data):
 def commit_to_git(yaml_content, vm_name, subdirectory, git_config):
     logger.info(f"Starting Git commit process for VM: {vm_name}")
     try:
-        # Use the persistent clone directory from git_config
-        repo_path = os.path.join(git_config['repo_url'].rstrip('/').split('/')[-1], 'repo')
+        # Use the persistent clone directory
+        repo_path = os.path.join(config.GIT_CLONE_DIR, 'repo')
         
         # Ensure the repository is up to date
         repo = git.Repo(repo_path)
