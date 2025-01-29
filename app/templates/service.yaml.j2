@@ -8,6 +8,9 @@ metadata:
     {%- if hostname %}
     external-dns.alpha.kubernetes.io/hostname: {{ hostname }}
     {%- endif %}
+  {%- if not address_pool and not hostname %}
+  annotations: {}
+  {%- endif %}
   labels:
     kubevirt.io/vm: {{ vm_name }}
   name: {{ vm_name }}
