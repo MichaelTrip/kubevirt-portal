@@ -46,7 +46,6 @@ spec:
         - name: {{ vm_name }}-pvc
           persistentVolumeClaim:
             claimName: {{ vm_name }}-pvc
-        {% if user_data %}
         - name: cloudinitdisk
           cloudInitNoCloud:
             networkData: |-
@@ -60,9 +59,10 @@ spec:
                       - type: static6
                         address: fd10:0:2::2/120
                         gateway: fd10:0:2::1
+            {% if user_data %}
             userData: |-
 {{ user_data | indent(14, True) }}
-        {% endif %}
+            {% endif %}
   dataVolumeTemplates:
     - metadata:
         name: {{ vm_name }}-pvc
