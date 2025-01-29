@@ -220,11 +220,22 @@ def ssh_websocket(ws):
     """WebSocket handler for SSH terminal"""
     host = request.args.get('host')
     port = int(request.args.get('port', 22))
+    client = None
+    channel = None
     
-    # Wait for authentication message
-    auth_message = ws.receive()
     try:
-        auth_data = json.loads(auth_message)
+        # Wait for authentication message
+        auth_message = ws.receive()
+        if not auth_message:
+            ws.send("\r\nError: No authentication message received\r\n")
+            return
+            
+        try:
+            auth_data = json.loads(auth_message)
+        except json.JSONDecodeError:
+            ws.send("\r\nError: Invalid authentication message format\r\n")
+            return
+            
         if auth_data.get('type') != 'auth':
             ws.send("\r\nError: Authentication required\r\n")
             return
@@ -236,26 +247,33 @@ def ssh_websocket(ws):
             ws.send("\r\nError: Username and password required\r\n")
             return
         
-        client = init_ssh_client()
-        client.connect(
-            host, 
-            port=port,
-            username=username,
-            password=password,
-            timeout=10,
-            allow_agent=False,
-            look_for_keys=False
-        )
-        channel = client.invoke_shell()
+        try:
+            client = init_ssh_client()
+            client.connect(
+                host, 
+                port=port,
+                username=username,
+                password=password,
+                timeout=10,
+                allow_agent=False,
+                look_for_keys=False
+            )
+            channel = client.invoke_shell()
+        except Exception as e:
+            ws.send(f"\r\nSSH Connection Error: {str(e)}\r\n")
+            return
     
         def send_data():
-            while True:
-                r, _, _ = select.select([channel], [], [], 0.1)
-                if r:
-                    data = channel.recv(1024)
-                    if not data:
-                        break
-                    ws.send(data.decode())
+            try:
+                while True:
+                    r, _, _ = select.select([channel], [], [], 0.1)
+                    if r:
+                        data = channel.recv(1024)
+                        if not data:
+                            break
+                        ws.send(data.decode())
+            except Exception as e:
+                ws.send(f"\r\nError in data thread: {str(e)}\r\n")
                 
         sender = threading.Thread(target=send_data)
         sender.daemon = True
@@ -265,12 +283,16 @@ def ssh_websocket(ws):
             data = ws.receive()
             if not data:
                 break
-            channel.send(data)
+            if channel:
+                channel.send(data)
         
     except Exception as e:
-        ws.send(f"\r\nError: {str(e)}\r\n")
+        ws.send(f"\r\nWebSocket Error: {str(e)}\r\n")
     finally:
-        client.close()
+        if channel:
+            channel.close()
+        if client:
+            client.close()
 
 @main.route('/api/vm/<vm_name>/power/<action>', methods=['POST'])
 def vm_power(vm_name, action):
