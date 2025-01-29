@@ -206,11 +206,12 @@ def get_vm_yaml(vm_name):
             return redirect(url_for('main.cluster_vms'))
         return render_template('terminal.html', vm_name=vm_name, host=host)
 
-    def init_ssh_client():
-        """Initialize SSH client with default settings"""
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        return client
+
+def init_ssh_client():
+    """Initialize SSH client with default settings"""
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    return client
 
 @sock.route('/terminal/ws')
 def ssh_websocket(ws):
