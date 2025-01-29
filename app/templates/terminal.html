@@ -56,7 +56,16 @@
         }
         
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/ws?host={{ host }}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+        const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/ws?host={{ host }}`);
+        
+        // Send credentials securely in first message
+        ws.onopen = () => {
+            ws.send(JSON.stringify({
+                type: 'auth',
+                username: username,
+                password: password
+            }));
+        };
         
         ws.onopen = () => {
             // Only remove login form after successful connection
