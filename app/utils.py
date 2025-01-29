@@ -17,9 +17,7 @@ jinja_env = Environment(
     lstrip_blocks=True
 )
 
-# Persistent clone location - read from environment variable with fallback
-CLONE_DIR = os.environ.get('GIT_CLONE_DIR', '/app/storage/clones')
-logger.info(f"Using Git clone directory: {CLONE_DIR}")
+logger.info("Initializing Git utilities")
 
 def ensure_git_clone(config):
     """
@@ -29,13 +27,13 @@ def ensure_git_clone(config):
     logger.info("Ensuring Git repository is cloned")
     
     # Create the storage directory if it doesn't exist
-    os.makedirs(CLONE_DIR, exist_ok=True)
+    os.makedirs(config.GIT_CLONE_DIR, exist_ok=True)
     
     # Construct the URL with authentication
     auth_url = f"https://{config.GIT_USERNAME}:{config.GIT_TOKEN}@{config.GIT_REPO_URL.replace('https://', '')}"
     
     # Check if the repository is already cloned
-    repo_path = os.path.join(CLONE_DIR, 'repo')
+    repo_path = os.path.join(config.GIT_CLONE_DIR, 'repo')
     
     try:
         if os.path.exists(os.path.join(repo_path, '.git')):
