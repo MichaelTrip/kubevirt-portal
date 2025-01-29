@@ -1,7 +1,10 @@
 from flask import Flask
 from config import Config
+from flask_sock import Sock
 import logging
 import sys
+
+sock = Sock()
 
 def create_app():
     # Configure logging
@@ -31,6 +34,7 @@ def create_app():
 
         from app.routes import main
         app.register_blueprint(main)
+        sock.init_app(app)
 
         return app
 
