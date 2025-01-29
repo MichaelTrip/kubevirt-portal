@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-01-29
+
+### Added
+- Enhanced error handling for SSH terminal connections
+- Improved validation for service port configurations
+- Better feedback for Git operations status
+
+### Changed
+- Optimized Git repository synchronization
+- Updated UI feedback messages
+- Improved logging for debugging purposes
+
+### Fixed
+- SSH terminal connection stability issues
+- Service port validation edge cases
+- Git repository locking conflicts
+
 ## [1.2.0] - 2025-01-29
 
 ### Added
