@@ -205,7 +205,8 @@ def get_vm_list(config):
                                         'storage': storage,
                                         'image': image_url,
                                         'address_pool': service_config.get('metadata', {}).get('annotations', {}).get('metallb.universe.tf/address-pool', 'default'),
-                                        'tags': tags
+                                        'tags': tags,
+                                        'service_type': service_config.get('spec', {}).get('type', 'LoadBalancer')
                                     }
                                     vms.append(vm_info)
                                     logger.debug(f"Added VM to list: {vm_info['name']}")
@@ -289,11 +290,12 @@ def get_vm_config(config, vm_name):
                 {
                     'port_name': port['name'],  # Changed from 'name' to 'port_name' to match form field
                     'port': port['port'],
-'protocol': port['protocol'],
+                    'protocol': port['protocol'],
                     'targetPort': port['targetPort']
                 }
                 for port in service_config['spec']['ports']
-            ]
+            ],
+            'service_type': service_config.get('spec', {}).get('type', 'LoadBalancer')
         }
 
 def update_vm_config(config, vm_name, form_data):
