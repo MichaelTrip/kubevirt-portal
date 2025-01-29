@@ -92,13 +92,13 @@
                                 <div>
                                     {% if vm.service.annotations.get('external-dns.alpha.kubernetes.io/hostname') %}
                                     <div class="small">
-                                        <span class="text-muted">FQDN:</span>
+                                        <span>FQDN:</span>
                                         <span class="badge bg-info">{{ vm.service.annotations['external-dns.alpha.kubernetes.io/hostname'] }}</span>
                                     </div>
                                     {% endif %}
                                     {% if vm.service.annotations.get('metallb.io/ip-allocated-from-pool') %}
                                     <div class="small">
-                                        <span class="text-muted">IP Address Pool:</span>
+                                        <span>IP Address Pool:</span>
                                         <span class="badge bg-info">{{ vm.service.annotations['metallb.io/ip-allocated-from-pool'] }}</span>
                                     </div>
                                     {% endif %}
