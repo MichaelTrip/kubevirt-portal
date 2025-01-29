@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-{%- if address_pool or hostname %}
+  {%- if address_pool or hostname %}
   annotations:
     {%- if address_pool %}
     metallb.universe.tf/address-pool: {{ address_pool }}
@@ -9,7 +9,7 @@ metadata:
     {%- if hostname %}
     external-dns.alpha.kubernetes.io/hostname: {{ hostname }}
     {%- endif %}
-{%- endif %}
+  {%- endif %}
   labels:
     kubevirt.io/vm: {{ vm_name }}
   name: {{ vm_name }}
