@@ -125,7 +125,7 @@ def commit_to_git(yaml_content, vm_name, subdirectory, git_config):
         repo.index.add([relative_file_path])
 
         # Create commit
-        commit = repo.index.commit(f'Add VM configuration for {vm_name} in {subdirectory}')
+        commit = repo.index.commit(f'Add/Update VM configuration for {vm_name} in {subdirectory}')
         logger.info(f"Created commit: {commit.hexsha}")
 
         # Push changes
@@ -140,9 +140,6 @@ def commit_to_git(yaml_content, vm_name, subdirectory, git_config):
 
     except git.GitCommandError as e:
         logger.error(f"Git error: {str(e)}")
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error during Git operations: {str(e)}")
         raise
 
 def get_vm_list(config):
@@ -211,47 +208,28 @@ def get_vm_config(config, vm_name):
     # Ensure repository is cloned and up to date
     repo_path = ensure_git_clone(config)
 
-    # Log all relevant paths and configuration
-    logger.info(f"Repository Path: {repo_path}")
-    logger.info(f"YAML_SUBDIRECTORY: {config.YAML_SUBDIRECTORY}")
-    logger.info(f"Attempting to find VM: {vm_name}")
-
-    # Construct the full file path
-    file_path = os.path.join(repo_path, config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
-    
-    # Log the exact path we're trying to access
-    logger.info(f"Attempting to read VM config from: {file_path}")
-    
-    # Check if the directory exists
+    # Construct the subdirectory path
     subdirectory_path = os.path.join(repo_path, config.YAML_SUBDIRECTORY)
-    if not os.path.exists(subdirectory_path):
-        logger.error(f"Subdirectory does not exist: {subdirectory_path}")
-        logger.error(f"Contents of repository path: {os.listdir(repo_path)}")
-        raise FileNotFoundError(f"Subdirectory {config.YAML_SUBDIRECTORY} not found in repository")
-
-    # List all files in the subdirectory
-    try:
-        existing_files = os.listdir(subdirectory_path)
-        logger.info(f"Files in subdirectory: {existing_files}")
-    except Exception as e:
-        logger.error(f"Error listing directory contents: {str(e)}")
-
-    # Check for case-insensitive match
-    matching_files = [f for f in existing_files if f.lower() == f"{vm_name}.yaml".lower()]
     
-    if matching_files:
-        # Use the first matching file (case-insensitive)
-        actual_filename = matching_files[0]
-        file_path = os.path.join(subdirectory_path, actual_filename)
-        logger.info(f"Found file with case-insensitive match: {file_path}")
-    else:
+    # Find the correct file
+    file_path = os.path.join(subdirectory_path, f"{vm_name}.yaml")
+    
+    # Check if file exists
+    if not os.path.exists(file_path):
+        logger.error(f"File not found: {file_path}")
+        existing_files = os.listdir(subdirectory_path)
+        logger.error(f"Existing files: {existing_files}")
         raise FileNotFoundError(f"No configuration file found for VM: {vm_name}")
-
+    
     with open(file_path, 'r') as f:
         content = f.read()
         docs = list(yaml.safe_load_all(content))
         vm_config = docs[0]
         service_config = docs[1]
+
+        # Verify that the metadata.name matches the requested vm_name
+        if vm_config['metadata']['name'] != vm_name:
+            logger.warning(f"Requested VM name {vm_name} does not match metadata name {vm_config['metadata']['name']}")
 
         # Extract tags from labels
         tags = []
@@ -275,12 +253,27 @@ def get_vm_config(config, vm_name):
                 {
                     'port_name': port['name'],  # Changed from 'name' to 'port_name' to match form field
                     'port': port['port'],
-                    'protocol': port['protocol'],
+'protocol': port['protocol'],
                     'targetPort': port['targetPort']
                 }
                 for port in service_config['spec']['ports']
             ]
         }
+
+def update_vm_config(config, vm_name, form_data):
+    """Update VM configuration in Git repository."""
+    # Generate YAML content
+    yaml_content = generate_yaml(form_data)
+    
+    # Prepare Git configuration
+    git_config = {
+        'repo_url': config.GIT_REPO_URL,
+        'username': config.GIT_USERNAME,
+        'token': config.GIT_TOKEN
+    }
+    
+    # Commit to Git with the metadata name
+    commit_to_git(yaml_content, vm_name, config.YAML_SUBDIRECTORY, git_config)
 
 def delete_vm_config(config, vm_name):
     """Delete VM configuration from Git repository."""
@@ -298,22 +291,3 @@ def delete_vm_config(config, vm_name):
         repo.remote().push()
     else:
         logger.warning(f"File {file_path} does not exist")
-
-def update_vm_config(config, vm_name, form_data):
-    """Update VM configuration in Git repository."""
-    # Log the incoming data for debugging
-    logger.info(f"Updating VM configuration for: {vm_name}")
-    logger.info(f"Subdirectory: {config.YAML_SUBDIRECTORY}")
-    
-    # Generate YAML content
-    yaml_content = generate_yaml(form_data)
-    
-    # Prepare Git configuration
-    git_config = {
-        'repo_url': config.GIT_REPO_URL,
-        'username': config.GIT_USERNAME,
-        'token': config.GIT_TOKEN
-    }
-    
-    # Commit to Git
-    commit_to_git(yaml_content, vm_name, config.YAML_SUBDIRECTORY, git_config)
