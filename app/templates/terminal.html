@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Terminal: {{ vm_name }}</h1>
+    <div id="terminal" style="height: 600px; background: #000; padding: 10px; border-radius: 5px;"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+
+<script>
+    const term = new Terminal({
+        cursorBlink: true,
+        theme: {
+            background: '#000000',
+            foreground: '#ffffff'
+        }
+    });
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    
+    term.open(document.getElementById('terminal'));
+    fitAddon.fit();
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/ws?host={{ host }}`);
+
+    term.onData(data => {
+        ws.send(data);
+    });
+
+    ws.onmessage = event => {
+        term.write(event.data);
+    };
+
+    ws.onclose = () => {
+        term.write('\r\nConnection closed\r\n');
+    };
+
+    ws.onerror = error => {
+        console.error('WebSocket error:', error);
+        term.write('\r\nWebSocket error occurred\r\n');
+    };
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        fitAddon.fit();
+    });
+</script>
+{% endblock %}
