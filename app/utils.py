@@ -256,24 +256,35 @@ def get_vm_config(config, vm_name):
         if vm_config['metadata']['name'] != vm_name:
             logger.warning(f"Requested VM name {vm_name} does not match metadata name {vm_config['metadata']['name']}")
 
-        # Extract tags from labels
+        # Extract tags from labels with safe access
         tags = []
-        labels = vm_config['spec']['template']['metadata']['labels']
+        labels = vm_config.get('spec', {}).get('template', {}).get('metadata', {}).get('labels', {})
         for key, value in labels.items():
             if key != 'kubevirt.io/vm':  # Skip the default label
                 tags.append({'key': key, 'value': value})
 
+        # Safely get memory value
+        memory_str = vm_config.get('spec', {}).get('template', {}).get('spec', {}).get('domain', {}).get('resources', {}).get('requests', {}).get('memory', '1G')
+        memory = int(memory_str.rstrip('G'))
+
+        # Safely get storage size
+        storage_str = vm_config.get('spec', {}).get('dataVolumeTemplates', [{}])[0].get('spec', {}).get('storage', {}).get('resources', {}).get('requests', {}).get('storage', '10Gi')
+        storage_size = int(storage_str.rstrip('Gi'))
+
+        # Get service annotations safely
+        service_annotations = service_config.get('metadata', {}).get('annotations', {})
+
         return {
-            'vm_name': vm_config['metadata']['name'],
+            'vm_name': vm_config.get('metadata', {}).get('name', 'unknown'),
             'tags': tags,
-            'cpu_cores': vm_config['spec']['template']['spec']['domain']['cpu']['cores'],
-            'memory': int(vm_config['spec']['template']['spec']['domain']['resources']['requests']['memory'].rstrip('G')),
-            'storage_size': int(vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['resources']['requests']['storage'].rstrip('Gi')),
-            'storage_class': vm_config['spec']['dataVolumeTemplates'][0]['spec']['storage']['storageClassName'],
-            'image_url': vm_config['spec']['dataVolumeTemplates'][0]['spec']['source']['http']['url'],
-            'user_data': vm_config['spec']['template']['spec']['volumes'][1]['cloudInitNoCloud']['userData'],
-            'hostname': service_config['metadata']['annotations']['external-dns.alpha.kubernetes.io/hostname'],
-            'address_pool': service_config['metadata']['annotations']['metallb.universe.tf/address-pool'],
+            'cpu_cores': vm_config.get('spec', {}).get('template', {}).get('spec', {}).get('domain', {}).get('cpu', {}).get('cores', 1),
+            'memory': memory,
+            'storage_size': storage_size,
+            'storage_class': vm_config.get('spec', {}).get('dataVolumeTemplates', [{}])[0].get('spec', {}).get('storage', {}).get('storageClassName', 'longhorn-rwx'),
+            'image_url': vm_config.get('spec', {}).get('dataVolumeTemplates', [{}])[0].get('spec', {}).get('source', {}).get('http', {}).get('url', ''),
+            'user_data': vm_config.get('spec', {}).get('template', {}).get('spec', {}).get('volumes', [{}])[1].get('cloudInitNoCloud', {}).get('userData', ''),
+            'hostname': service_annotations.get('external-dns.alpha.kubernetes.io/hostname', ''),
+            'address_pool': service_annotations.get('metallb.universe.tf/address-pool', ''),
             'service_ports': [
                 {
                     'port_name': port['name'],  # Changed from 'name' to 'port_name' to match form field
