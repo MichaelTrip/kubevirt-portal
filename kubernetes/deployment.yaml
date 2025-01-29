@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kubevirt-portal
+  namespace: kubevirt-portal
   labels:
     app: kubevirt-portal
 spec:
@@ -14,6 +15,7 @@ spec:
       labels:
         app: kubevirt-portal
     spec:
+      serviceAccountName: vm-manager-serviceaccount
       containers:
       - name: kubevirt-portal
         image: ghcr.io/michaeltrip/kubevirt-portal:latest
