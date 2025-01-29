@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request, Response
+import json
 from flask_sock import Sock
 import paramiko
 import select
@@ -219,16 +220,23 @@ def ssh_websocket(ws):
     """WebSocket handler for SSH terminal"""
     host = request.args.get('host')
     port = int(request.args.get('port', 22))
-
-    username = request.args.get('username')
-    password = request.args.get('password')
     
-    if not username or not password:
-        ws.send("\r\nError: Username and password required\r\n")
-        return
-    
-    client = init_ssh_client()
+    # Wait for authentication message
+    auth_message = ws.receive()
     try:
+        auth_data = json.loads(auth_message)
+        if auth_data.get('type') != 'auth':
+            ws.send("\r\nError: Authentication required\r\n")
+            return
+            
+        username = auth_data.get('username')
+        password = auth_data.get('password')
+        
+        if not username or not password:
+            ws.send("\r\nError: Username and password required\r\n")
+            return
+        
+        client = init_ssh_client()
         client.connect(
             host, 
             port=port,
