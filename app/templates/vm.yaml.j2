@@ -46,6 +46,7 @@ spec:
         - name: {{ vm_name }}-pvc
           persistentVolumeClaim:
             claimName: {{ vm_name }}-pvc
+        {% if user_data %}
         - name: cloudinitdisk
           cloudInitNoCloud:
             networkData: |-
@@ -61,6 +62,7 @@ spec:
                         gateway: fd10:0:2::1
             userData: |-
 {{ user_data | indent(14, True) }}
+        {% endif %}
   dataVolumeTemplates:
     - metadata:
         name: {{ vm_name }}-pvc
@@ -71,7 +73,7 @@ spec:
             requests:
               storage: {{ storage_size }}Gi
           accessModes:
-            - ReadWriteMany
+            - {{ storage_access_mode }}
           storageClassName: {{ storage_class }}
         source:
           http:
