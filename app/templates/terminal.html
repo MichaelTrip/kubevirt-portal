@@ -72,16 +72,19 @@
         let authenticated = false;
         
         ws.onmessage = event => {
-            if (!authenticated && event.data === "\r\nConnected!\r\n") {
-                authenticated = true;
-                loginForm.remove();
-                
-                // Set up terminal handlers after authentication
-                term.onData(data => {
-                    ws.send(data);
-                });
-            }
             term.write(event.data);
+            
+            if (!authenticated) {
+                if (event.data.includes("Connected!")) {
+                    authenticated = true;
+                    loginForm.remove();
+                    
+                    // Set up terminal handlers after authentication
+                    term.onData(data => {
+                        ws.send(data);
+                    });
+                }
+            }
         };
 
         ws.onclose = () => {

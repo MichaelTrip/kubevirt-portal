@@ -223,6 +223,7 @@ def ssh_websocket(ws):
     channel = None
     
     try:
+        ws.send("\r\nWaiting for authentication...\r\n")
         # Wait for authentication message
         auth_message = ws.receive()
         if not auth_message:
@@ -231,6 +232,7 @@ def ssh_websocket(ws):
             
         try:
             auth_data = json.loads(auth_message)
+            ws.send("\r\nAuthentication message received...\r\n")
         except json.JSONDecodeError:
             ws.send("\r\nError: Invalid authentication message format\r\n")
             return
@@ -247,6 +249,7 @@ def ssh_websocket(ws):
             return
         
         try:
+            ws.send(f"\r\nAttempting SSH connection to {host}...\r\n")
             client = init_ssh_client()
             client.connect(
                 hostname=host,
@@ -258,8 +261,11 @@ def ssh_websocket(ws):
                 look_for_keys=False,
                 banner_timeout=60
             )
+            ws.send("\r\nSSH connection established...\r\n")
+            
             channel = client.invoke_shell(term='xterm')
             channel.settimeout(0)  # Non-blocking mode
+            ws.send("\r\nShell channel opened...\r\n")
             ws.send("\r\nConnected!\r\n")
         except Exception as e:
             ws.send(f"\r\nSSH Connection Error: {str(e)}\r\n")
