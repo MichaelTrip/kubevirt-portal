@@ -153,7 +153,13 @@ def edit_vm(vm_name):
                 yaml_content = generate_yaml(form_data)
                 return render_template('edit_vm.html', form=form, vm_name=vm_name, preview_yaml=yaml_content)
 
-            update_vm_config(Config, vm_name, form_data)
+            yaml_content = generate_yaml(form_data, Config)
+            git_config = {
+                'repo_url': Config.GIT_REPO_URL,
+                'username': Config.GIT_USERNAME,
+                'token': Config.GIT_TOKEN
+            }
+            commit_to_git(yaml_content, vm_name, Config.YAML_SUBDIRECTORY, git_config)
             flash('VM configuration updated successfully!', 'success')
             return redirect(url_for('main.vm_list'))
 
