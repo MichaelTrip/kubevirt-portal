@@ -110,7 +110,7 @@ def commit_to_git(yaml_content, vm_name, subdirectory, git_config):
     logger.info(f"Starting Git commit process for VM: {vm_name}")
     try:
         # Use the persistent clone directory
-        repo_path = os.path.join(config.GIT_CLONE_DIR, 'repo')
+        repo_path = os.path.join(Config.GIT_CLONE_DIR, 'repo')
         
         # Ensure the repository is up to date
         repo = git.Repo(repo_path)
