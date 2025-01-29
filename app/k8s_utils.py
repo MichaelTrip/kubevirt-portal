@@ -154,7 +154,8 @@ def process_vm_details(vm, vmi_mapping=None, service_mapping=None):
             'external_ips': external_ips,
             'cluster_ip': service.spec.cluster_ip,
             'ports': ports,
-            'type': service.spec.type
+            'type': service.spec.type,
+            'annotations': service.metadata.annotations or {}
         }
 
     return {
