@@ -3,6 +3,7 @@ from flask_sock import Sock
 import paramiko
 import select
 import threading
+from app import sock
 from app.forms import VMForm
 from app.utils import (generate_yaml, commit_to_git, get_vm_list,
                       get_vm_config, delete_vm_config, update_vm_config)
@@ -211,40 +212,40 @@ def get_vm_yaml(vm_name):
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         return client
 
-    @sock.route('/terminal/ws')
-    def ssh_websocket(ws):
-        """WebSocket handler for SSH terminal"""
-        host = request.args.get('host')
-        port = int(request.args.get('port', 22))
+@sock.route('/terminal/ws')
+def ssh_websocket(ws):
+    """WebSocket handler for SSH terminal"""
+    host = request.args.get('host')
+    port = int(request.args.get('port', 22))
+
+    client = init_ssh_client()
+    try:
+        client.connect(host, port, timeout=10)
+        channel = client.invoke_shell()
     
-        client = init_ssh_client()
-        try:
-            client.connect(host, port, timeout=10)
-            channel = client.invoke_shell()
-        
-            def send_data():
-                while True:
-                    r, _, _ = select.select([channel], [], [], 0.1)
-                    if r:
-                        data = channel.recv(1024)
-                        if not data:
-                            break
-                        ws.send(data.decode())
-                    
-            sender = threading.Thread(target=send_data)
-            sender.daemon = True
-            sender.start()
-        
+        def send_data():
             while True:
-                data = ws.receive()
-                if not data:
-                    break
-                channel.send(data)
-            
-        except Exception as e:
-            ws.send(f"\r\nError: {str(e)}\r\n")
-        finally:
-            client.close()
+                r, _, _ = select.select([channel], [], [], 0.1)
+                if r:
+                    data = channel.recv(1024)
+                    if not data:
+                        break
+                    ws.send(data.decode())
+                
+        sender = threading.Thread(target=send_data)
+        sender.daemon = True
+        sender.start()
+    
+        while True:
+            data = ws.receive()
+            if not data:
+                break
+            channel.send(data)
+        
+    except Exception as e:
+        ws.send(f"\r\nError: {str(e)}\r\n")
+    finally:
+        client.close()
 
 @main.route('/api/vm/<vm_name>/power/<action>', methods=['POST'])
 def vm_power(vm_name, action):
