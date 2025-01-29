@@ -50,28 +50,39 @@
         const username = document.getElementById('sshUsername').value;
         const password = document.getElementById('sshPassword').value;
         
+        if (!username || !password) {
+            alert('Please enter both username and password');
+            return;
+        }
+        
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/ws?host={{ host }}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
         
-        // Remove login form after connection attempt
-        loginForm.remove();
+        ws.onopen = () => {
+            // Only remove login form after successful connection
+            loginForm.remove();
+            
+            // Set up terminal handlers after connection is established
+            term.onData(data => {
+                ws.send(data);
+            });
+        };
 
-    term.onData(data => {
-        ws.send(data);
+        ws.onmessage = event => {
+            term.write(event.data);
+        };
+
+        ws.onclose = () => {
+            term.write('\r\nConnection closed\r\n');
+            // Show login form again on disconnect
+            document.body.appendChild(loginForm);
+        };
+
+        ws.onerror = error => {
+            console.error('WebSocket error:', error);
+            term.write('\r\nWebSocket error occurred\r\n');
+        };
     });
-
-    ws.onmessage = event => {
-        term.write(event.data);
-    };
-
-    ws.onclose = () => {
-        term.write('\r\nConnection closed\r\n');
-    };
-
-    ws.onerror = error => {
-        console.error('WebSocket error:', error);
-        term.write('\r\nWebSocket error occurred\r\n');
-    };
 
     // Handle window resize
     window.addEventListener('resize', () => {
