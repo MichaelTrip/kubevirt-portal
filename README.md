@@ -127,9 +127,12 @@ Required:
 - `GIT_TOKEN`: Git authentication token
 
 Optional:
-- `SECRET_KEY`: Flask secret key
-- `YAML_SUBDIRECTORY`: VM configuration directory (default: "vms/")
-- `FLASK_ENV`: Application environment
+- `SECRET_KEY`: Flask secret key (default: "dev-secret-key")
+- `YAML_SUBDIRECTORY`: VM configuration directory (default: "virtualmachines/")
+- `GIT_CLONE_DIR`: Directory for Git repository clones (default: "/app/storage/clones")
+- `EXTERNAL_DNS_ENABLED`: Enable ExternalDNS integration (default: "false")
+- `METALLB_ENABLED`: Enable MetalLB integration (default: "false")
+- `FLASK_DEBUG`: Enable debug mode (default: "false")
 
 ### Resource Requirements
 
