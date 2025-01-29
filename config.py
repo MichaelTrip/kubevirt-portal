@@ -13,7 +13,7 @@ class Config:
     GIT_TOKEN = os.getenv('GIT_TOKEN')
 
     # YAML configuration
-    YAML_SUBDIRECTORY = os.getenv('YAML_SUBDIRECTORY', 'virtualmachines/')
+    YAML_SUBDIRECTORY = os.getenv('YAML_SUBDIRECTORY', 'vms/')
 
     def __init__(self):
         # Validate immediately during initialization
