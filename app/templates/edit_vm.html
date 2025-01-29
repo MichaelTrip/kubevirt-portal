@@ -45,10 +45,12 @@
             <label class="form-label">User Data</label>
             {{ form.user_data(class="form-control", rows="10") }}
         </div>
+        {% if config.EXTERNAL_DNS_ENABLED %}
         <div class="mb-3">
             <label class="form-label">Hostname</label>
-            {{ form.hostname(class="form-control") }}
+            {{ form.hostname(class="form-control", placeholder="Optional - Only used if ExternalDNS is configured") }}
         </div>
+        {% endif %}
         <div class="mb-3">
             <label class="form-label">Address Pool</label>
             {{ form.address_pool(class="form-control") }}

@@ -4,16 +4,15 @@ metadata:
   labels:
     kubevirt.io/vm: {{ vm_name }}
   name: {{ vm_name }}
-{%- if address_pool or hostname %}
+{% if address_pool or hostname %}
   annotations:
-    {%- if address_pool %}
+{% if address_pool %}
     metallb.universe.tf/address-pool: {{ address_pool }}
-    {%- endif %}
-    {%- if hostname %}
+{% endif %}
+{% if hostname %}
     external-dns.alpha.kubernetes.io/hostname: {{ hostname }}
-    {%- endif %}
-{%- endif %}
-
+{% endif %}
+{% endif %}
 spec:
   ipFamilyPolicy: PreferDualStack
   externalTrafficPolicy: Local
