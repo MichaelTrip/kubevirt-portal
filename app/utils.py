@@ -255,11 +255,14 @@ def delete_vm_config(config, vm_name):
     repo = git.Repo(repo_path)
     file_path = os.path.join(repo_path, config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
     
-if os.path.exists(file_path):
+    if os.path.exists(file_path):
         os.remove(file_path)
-        repo.index.remove([os.path.join(config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")])
+        relative_file_path = os.path.join(config.YAML_SUBDIRECTORY, f"{vm_name}.yaml")
+        repo.index.remove([relative_file_path])
         repo.index.commit(f"Delete VM configuration for {vm_name}")
         repo.remote().push()
+    else:
+        logger.warning(f"File {file_path} does not exist")
 
 def update_vm_config(config, vm_name, form_data):
     """Update VM configuration in Git repository."""
