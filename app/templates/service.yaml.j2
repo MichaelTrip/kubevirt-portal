@@ -2,25 +2,25 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    {% if address_pool %}metallb.universe.tf/address-pool: {{ address_pool }}{% endif %}
-    {% if hostname %}external-dns.alpha.kubernetes.io/hostname: {{ hostname }}{% endif %}
+    {%- if address_pool %}
+    metallb.universe.tf/address-pool: {{ address_pool }}
+    {%- endif %}
+    {%- if hostname %}
+    external-dns.alpha.kubernetes.io/hostname: {{ hostname }}
+    {%- endif %}
   labels:
     kubevirt.io/vm: {{ vm_name }}
   name: {{ vm_name }}
 spec:
-  {% if service_type == 'LoadBalancer' %}
-  ipFamilyPolicy: PreferDualStack
-  externalTrafficPolicy: Local
-  {% endif %}
   ports:
-{% for port in service_ports %}
+  {%- for port in service_ports %}
   - name: {{ port.port_name }}
     port: {{ port.port }}
     protocol: {{ port.protocol }}
     targetPort: {{ port.targetPort }}
-{% endfor %}
+  {%- endfor %}
   selector:
     kubevirt.io/vm: {{ vm_name }}
-  type: {{ service_type }}
+  type: {{ service_type if service_type else 'ClusterIP' }}
 status:
   loadBalancer: {}

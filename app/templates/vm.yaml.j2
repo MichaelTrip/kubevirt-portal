@@ -59,10 +59,8 @@ spec:
                       - type: static6
                         address: fd10:0:2::2/120
                         gateway: fd10:0:2::1
-            {% if user_data %}
             userData: |-
-{{ user_data | indent(14, True) }}
-            {% endif %}
+              {{ user_data if user_data else '#cloud-config' }}
   dataVolumeTemplates:
     - metadata:
         name: {{ vm_name }}-pvc
@@ -73,7 +71,7 @@ spec:
             requests:
               storage: {{ storage_size }}Gi
           accessModes:
-            - {{ storage_access_mode }}
+            - {{ storage_access_mode if storage_access_mode else 'ReadWriteMany' }}
           storageClassName: {{ storage_class }}
         source:
           http:
