@@ -158,6 +158,14 @@ def process_vm_details(vm, vmi_mapping=None, service_mapping=None):
             'annotations': service.metadata.annotations or {}
         }
 
+    # Extract user_data from the VM spec
+    volumes = spec.get('template', {}).get('spec', {}).get('volumes', [])
+    user_data = None
+    for volume in volumes:
+        if 'cloudInitNoCloud' in volume:
+            user_data = volume['cloudInitNoCloud'].get('userData', '')
+            break
+
     return {
         'name': name,
         'namespace': namespace,
@@ -167,5 +175,6 @@ def process_vm_details(vm, vmi_mapping=None, service_mapping=None):
         'labels': metadata.get('labels', {}),
         'created': parsed_creation_time,
         'vmi': vmi_details,
-        'service': service_details
+        'service': service_details,
+        'user_data': user_data
     }

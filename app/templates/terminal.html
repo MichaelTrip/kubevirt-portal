@@ -84,10 +84,6 @@
             term.write(event.data);
         };
 
-        ws.onmessage = event => {
-            term.write(event.data);
-        };
-
         ws.onclose = () => {
             term.write('\r\nConnection closed\r\n');
             // Show login form again on disconnect
