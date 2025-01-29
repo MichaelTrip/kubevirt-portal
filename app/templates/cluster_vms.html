@@ -89,13 +89,19 @@
                             <div class="ms-4">
                                 <div>Type: <span class="badge bg-secondary">{{ vm.service.type }}</span></div>
                                 {% if vm.service.annotations %}
-                                <div>Annotations:
-                                    {% for key, value in vm.service.annotations.items() %}
+                                <div>
+                                    {% if vm.service.annotations.get('external-dns.alpha.kubernetes.io/hostname') %}
                                     <div class="small">
-                                        <span class="text-muted">{{ key }}:</span>
-                                        <span class="badge bg-info">{{ value }}</span>
+                                        <span class="text-muted">FQDN:</span>
+                                        <span class="badge bg-info">{{ vm.service.annotations['external-dns.alpha.kubernetes.io/hostname'] }}</span>
                                     </div>
-                                    {% endfor %}
+                                    {% endif %}
+                                    {% if vm.service.annotations.get('metallb.io/ip-allocated-from-pool') %}
+                                    <div class="small">
+                                        <span class="text-muted">IP Address Pool:</span>
+                                        <span class="badge bg-info">{{ vm.service.annotations['metallb.io/ip-allocated-from-pool'] }}</span>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 {% endif %}
                                 {% if vm.service.external_ips %}
