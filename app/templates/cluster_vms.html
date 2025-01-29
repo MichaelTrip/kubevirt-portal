@@ -133,15 +133,28 @@
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary view-yaml" data-vm-name="{{ vm.name }}">
-                            <i class="bi bi-code-square me-1"></i>View VM YAML
-                        </button>
-                        {% if vm.service %}
-                        <button type="button" class="btn btn-sm btn-outline-info view-service-yaml" data-service-name="{{ vm.name }}">
-                            <i class="bi bi-code-square me-1"></i>View Service YAML
-                        </button>
-                        {% endif %}
+                    <div class="d-flex justify-content-between gap-2">
+                        <div>
+                            {% if vm.running %}
+                            <button type="button" class="btn btn-sm btn-danger power-action" data-vm-name="{{ vm.name }}" data-action="stop">
+                                <i class="bi bi-power me-1"></i>Power Off
+                            </button>
+                            {% else %}
+                            <button type="button" class="btn btn-sm btn-success power-action" data-vm-name="{{ vm.name }}" data-action="start">
+                                <i class="bi bi-power me-1"></i>Power On
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-primary view-yaml" data-vm-name="{{ vm.name }}">
+                                <i class="bi bi-code-square me-1"></i>View VM YAML
+                            </button>
+                            {% if vm.service %}
+                            <button type="button" class="btn btn-sm btn-outline-info view-service-yaml" data-service-name="{{ vm.name }}">
+                                <i class="bi bi-code-square me-1"></i>View Service YAML
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -299,6 +312,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 yamlModal.show();
             } catch (error) {
                 console.error('Error fetching Service YAML:', error);
+            }
+        });
+    });
+
+    // Power management
+    document.querySelectorAll('.power-action').forEach(button => {
+        button.addEventListener('click', async function() {
+            const vmName = this.dataset.vmName;
+            const action = this.dataset.action;
+            if (confirm(`Are you sure you want to ${action} VM ${vmName}?`)) {
+                try {
+                    const response = await fetch(`/api/vm/${vmName}/power/${action}`, {
+                        method: 'POST'
+                    });
+                    if (response.ok) {
+                        // Reload the page to show updated status
+                        window.location.reload();
+                    } else {
+                        alert(`Failed to ${action} VM: ${await response.text()}`);
+                    }
+                } catch (error) {
+                    console.error(`Error ${action}ing VM:`, error);
+                    alert(`Error ${action}ing VM: ${error.message}`);
+                }
             }
         });
     });

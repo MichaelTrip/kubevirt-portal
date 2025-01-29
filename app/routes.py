@@ -192,6 +192,19 @@ def get_vm_yaml(vm_name):
         logger.error(f"Error getting VM YAML: {str(e)}")
         return str(e), 500
 
+@main.route('/api/vm/<vm_name>/power/<action>', methods=['POST'])
+def vm_power(vm_name, action):
+    """Power on/off a VM"""
+    try:
+        if action not in ['start', 'stop']:
+            return "Invalid action", 400
+            
+        power_vm(vm_name, action)
+        return "Success", 200
+    except Exception as e:
+        logger.error(f"Error controlling VM power: {str(e)}")
+        return str(e), 500
+
 @main.route('/api/service/<service_name>/yaml', methods=['GET'])
 def get_service_yaml(service_name):
     """Get raw YAML for a Service"""
@@ -205,3 +218,35 @@ def get_service_yaml(service_name):
     except Exception as e:
         logger.error(f"Error getting Service YAML: {str(e)}")
         return str(e), 500
+
+def power_vm(vm_name, action):
+    """Power on/off a VM"""
+    try:
+        _, custom_api = get_kubernetes_client()
+        
+        # Get current VM state
+        vm = custom_api.get_namespaced_custom_object(
+            group="kubevirt.io",
+            version="v1",
+            namespace="virtualmachines",
+            plural="virtualmachines",
+            name=vm_name
+        )
+        
+        # Update running state based on action
+        vm['spec']['running'] = action == 'start'
+        
+        # Apply the update
+        custom_api.patch_namespaced_custom_object(
+            group="kubevirt.io",
+            version="v1",
+            namespace="virtualmachines",
+            plural="virtualmachines",
+            name=vm_name,
+            body=vm
+        )
+        
+        return True
+    except Exception as e:
+        logger.error(f"Error {action}ing VM {vm_name}: {str(e)}")
+        raise
