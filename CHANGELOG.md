@@ -16,11 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatically manages DNS records for VMs
   - Configurable through hostname field in VM creation
   - Supports multiple DNS providers via ExternalDNS
-  - Adds DNS annotations to Kubernetes Services
+  - Adds `external-dns.alpha.kubernetes.io/hostname` annotation to Services
+  - Example: `external-dns.alpha.kubernetes.io/hostname: myvm.example.com`
 - MetalLB Integration:
   - Enable with `METALLB_ENABLED=true`
   - Provides LoadBalancer services for VMs
-  - Configurable IP address pools
+  - Configurable IP address pools via annotations
+  - Adds `metallb.universe.tf/address-pool` annotation to Services
+  - Example: `metallb.universe.tf/address-pool: production-pool`
   - Supports both layer 2 and BGP modes
   - Automatic IP allocation for VM services
 
