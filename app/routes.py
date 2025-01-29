@@ -212,7 +212,6 @@ def init_ssh_client():
     """Initialize SSH client with password authentication only"""
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.get_transport
     return client
 
 @sock.route('/terminal/ws')
@@ -250,15 +249,18 @@ def ssh_websocket(ws):
         try:
             client = init_ssh_client()
             client.connect(
-                host, 
+                hostname=host,
                 port=port,
                 username=username,
                 password=password,
                 timeout=10,
                 allow_agent=False,
-                look_for_keys=False
+                look_for_keys=False,
+                banner_timeout=60
             )
-            channel = client.invoke_shell()
+            channel = client.invoke_shell(term='xterm')
+            channel.settimeout(0)  # Non-blocking mode
+            ws.send("\r\nConnected!\r\n")
         except Exception as e:
             ws.send(f"\r\nSSH Connection Error: {str(e)}\r\n")
             return
