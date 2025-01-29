@@ -153,6 +153,17 @@
                             <button type="button" class="btn btn-sm btn-outline-info view-service-yaml" data-service-name="{{ vm.name }}">
                                 <i class="bi bi-code-square me-1"></i>View Service YAML
                             </button>
+                            {% if vm.service.ports and vm.service.external_ips %}
+                                {% for port in vm.service.ports %}
+                                    {% if port.port == 22 %}
+                                        {% for ip in vm.service.external_ips %}
+                                        <a href="ssh://{{ ip }}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-terminal me-1"></i>SSH
+                                        </a>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
                             {% endif %}
                         </div>
                     </div>
