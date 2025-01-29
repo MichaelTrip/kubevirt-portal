@@ -24,8 +24,37 @@
     term.open(document.getElementById('terminal'));
     fitAddon.fit();
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/ws?host={{ host }}&username=${encodeURIComponent(prompt('Username:'))}&password=${encodeURIComponent(prompt('Password:'))}`);
+    // Create login form
+    const loginForm = document.createElement('div');
+    loginForm.innerHTML = `
+        <div class="login-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+            <div class="card" style="width: 300px;">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">SSH Authentication</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" id="sshUsername">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="sshPassword">
+                    </div>
+                    <button class="btn btn-primary w-100" id="sshConnect">Connect</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(loginForm);
+
+    document.getElementById('sshConnect').addEventListener('click', () => {
+        const username = document.getElementById('sshUsername').value;
+        const password = document.getElementById('sshPassword').value;
+        
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/terminal/ws?host={{ host }}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+        
+        // Remove login form after connection attempt
+        loginForm.remove();
 
     term.onData(data => {
         ws.send(data);
