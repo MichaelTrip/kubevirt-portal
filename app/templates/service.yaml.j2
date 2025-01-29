@@ -15,7 +15,9 @@ metadata:
 {% endif %}
 spec:
   ipFamilyPolicy: PreferDualStack
+  {% if service_type == 'LoadBalancer' %}
   externalTrafficPolicy: Local
+  {% endif %}
   ports:
 {% for port in service_ports %}
   - name: {{ port.port_name }}
