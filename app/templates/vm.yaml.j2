@@ -2,6 +2,11 @@ apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
   name: {{ vm_name }}
+  labels:
+    kubevirt.io/vm: {{ vm_name }}
+    {% for tag in tags %}
+    {{ tag.key }}: {{ tag.value }}
+    {% endfor %}
 spec:
   running: false
   template:
