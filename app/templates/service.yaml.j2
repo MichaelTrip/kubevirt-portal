@@ -25,6 +25,6 @@ spec:
 {% endfor %}
   selector:
     kubevirt.io/vm: {{ vm_name }}
-  type: LoadBalancer
+  type: {{ service_type }}
 status:
   loadBalancer: {}
