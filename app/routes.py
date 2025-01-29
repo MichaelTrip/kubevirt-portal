@@ -197,14 +197,14 @@ def get_vm_yaml(vm_name):
         logger.error(f"Error getting VM YAML: {str(e)}")
         return str(e), 500
 
-    @main.route('/terminal/<vm_name>')
-    def terminal(vm_name):
-        """Web-based SSH terminal"""
-        host = request.args.get('host')
-        if not host:
-            flash('No host IP provided', 'error')
-            return redirect(url_for('main.cluster_vms'))
-        return render_template('terminal.html', vm_name=vm_name, host=host)
+@main.route('/terminal/<vm_name>')
+def terminal(vm_name):
+    """Web-based SSH terminal"""
+    host = request.args.get('host')
+    if not host:
+        flash('No host IP provided', 'error')
+        return redirect(url_for('main.cluster_vms'))
+    return render_template('terminal.html', vm_name=vm_name, host=host)
 
 
 def init_ssh_client():
