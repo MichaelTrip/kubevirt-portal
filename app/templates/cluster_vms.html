@@ -98,7 +98,7 @@
                                     {% endif %}
                                     {% if vm.service.annotations.get('metallb.io/ip-allocated-from-pool') %}
                                     <div class="small">
-                                        <span>IP Address Pool:</span>
+                                        <span>IP Pool:</span>
                                         <span class="badge bg-info">{{ vm.service.annotations['metallb.io/ip-allocated-from-pool'] }}</span>
                                     </div>
                                     {% endif %}
