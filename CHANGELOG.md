@@ -11,11 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for custom storage access modes
 - Configurable Git clone directory
 - Enhanced environment variable validation
+- ExternalDNS Integration:
+  - Enable with `EXTERNAL_DNS_ENABLED=true`
+  - Automatically manages DNS records for VMs
+  - Configurable through hostname field in VM creation
+  - Supports multiple DNS providers via ExternalDNS
+  - Adds DNS annotations to Kubernetes Services
+- MetalLB Integration:
+  - Enable with `METALLB_ENABLED=true`
+  - Provides LoadBalancer services for VMs
+  - Configurable IP address pools
+  - Supports both layer 2 and BGP modes
+  - Automatic IP allocation for VM services
 
 ### Changed
 - Improved error handling for Git operations
 - Better feedback for configuration issues
 - Updated documentation for new environment variables
+- Enhanced service configuration options
+- Improved network integration capabilities
 
 ## [1.2.1] - 2025-01-29
 
