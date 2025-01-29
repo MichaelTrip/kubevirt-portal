@@ -67,7 +67,7 @@ users:
     {% if config.METALLB_ENABLED %}
     <div class="mb-3">
         <label class="form-label">Address Pool</label>
-        {{ form.address_pool(class="form-control", placeholder="Optional - Required for LoadBalancer type") }}
+        {{ form.address_pool(class="form-control", placeholder="Optional - Only used if MetalLB is configured") }}
     </div>
     {% endif %}
 
