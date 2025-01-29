@@ -158,16 +158,9 @@
                                 {% for port in vm.service.ports %}
                                     {% if port.port == 22 and not ns.found %}
                                         {% set ns.found = true %}
-                                        {% if vm.service.external_ips %}
-                                            <a href="{{ url_for('main.terminal', vm_name=vm.name, host=vm.service.external_ips[0]) }}" class="btn btn-sm btn-outline-success" target="_blank">
-                                                <i class="bi bi-terminal me-1"></i>Web SSH (External)
-                                            </a>
-                                        {% endif %}
-                                        {% if vm.service.cluster_ip %}
-                                            <a href="{{ url_for('main.terminal', vm_name=vm.name, host=vm.service.cluster_ip) }}" class="btn btn-sm btn-outline-success" target="_blank">
-                                                <i class="bi bi-terminal me-1"></i>Web SSH (Internal)
-                                            </a>
-                                        {% endif %}
+                                        <a href="{{ url_for('main.terminal', vm_name=vm.name, host=vm.service.external_ips[0] if vm.service.external_ips else vm.service.cluster_ip) }}" class="btn btn-sm btn-outline-success" target="_blank">
+                                            <i class="bi bi-terminal me-1"></i>Web SSH
+                                        </a>
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}
