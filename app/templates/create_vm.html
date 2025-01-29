@@ -37,6 +37,10 @@
         {{ form.storage_class(class="form-control") }}
     </div>
     <div class="mb-3">
+        <label class="form-label">Storage Access Mode</label>
+        {{ form.storage_access_mode(class="form-control") }}
+    </div>
+    <div class="mb-3">
         <label class="form-label">Image URL</label>
         {{ form.image_url(class="form-control") }}
     </div>
@@ -55,8 +59,12 @@ users:
         {{ form.hostname(class="form-control") }}
     </div>
     <div class="mb-3">
+        <label class="form-label">Service Type</label>
+        {{ form.service_type(class="form-control") }}
+    </div>
+    <div class="mb-3">
         <label class="form-label">Address Pool</label>
-        {{ form.address_pool(class="form-control") }}
+        {{ form.address_pool(class="form-control", placeholder="Optional - Required for LoadBalancer type") }}
     </div>
 
     <div class="mb-3">

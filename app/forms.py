@@ -27,8 +27,17 @@ class VMForm(FlaskForm):
     memory = IntegerField('Memory (GB)', validators=[DataRequired(), NumberRange(min=1, max=64)])
     storage_size = IntegerField('Storage Size (GB)', validators=[DataRequired(), NumberRange(min=1, max=2048)])
     storage_class = StringField('Storage Class', default='longhorn-rwx')
+    storage_access_mode = SelectField('Storage Access Mode', 
+                                    choices=[('ReadWriteMany', 'ReadWriteMany'),
+                                           ('ReadWriteOnce', 'ReadWriteOnce'),
+                                           ('ReadOnlyMany', 'ReadOnlyMany')],
+                                    default='ReadWriteMany')
     image_url = StringField('Image URL', validators=[DataRequired()])
     user_data = TextAreaField('User Data')
-    hostname = StringField('Hostname', validators=[DataRequired()])
-    address_pool = StringField('Address Pool', validators=[DataRequired()])
+    hostname = StringField('Hostname')
+    address_pool = StringField('Address Pool')
+    service_type = SelectField('Service Type',
+                             choices=[('LoadBalancer', 'LoadBalancer'),
+                                    ('ClusterIP', 'ClusterIP')],
+                             default='LoadBalancer')
     service_ports = FieldList(FormField(ServicePortForm), min_entries=1)
