@@ -4,9 +4,10 @@ from flask_sock import Sock
 import logging
 import sys
 import warnings
+from cryptography.utils import CryptographyDeprecationWarning
 
 # Filter out specific cryptography deprecation warnings
-warnings.filterwarnings('ignore', category=CryptographyDeprecationWarning, 
+warnings.filterwarnings('ignore', category=CryptographyDeprecationWarning,
                        message='.*TripleDES.*')
 
 sock = Sock()
