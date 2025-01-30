@@ -8,8 +8,9 @@ sock = Sock()
 
 def create_app():
     # Configure logging
+    log_level = logging.DEBUG if config.DEBUG else logging.INFO
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=log_level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(sys.stdout),
