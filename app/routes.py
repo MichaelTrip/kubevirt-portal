@@ -147,7 +147,8 @@ def edit_vm(vm_name):
                 'user_data': form.user_data.data,
                 'hostname': form.hostname.data,
                 'address_pool': form.address_pool.data,
-                'service_ports': service_ports_data
+                'service_ports': service_ports_data,
+                'service_type': form.service_type.data
             }
 
             if 'preview' in request.form:
