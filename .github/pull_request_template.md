@@ -1,37 +1,41 @@
-# Feature: Optional MetalLB and ExternalDNS Integration
-
 ## Description
-This PR adds optional integration with MetalLB and ExternalDNS, allowing for more flexible network configuration of virtual machines.
+<!-- Provide a brief description of the changes in this PR -->
 
-### Added
-- ExternalDNS Integration:
-  - Enable with `EXTERNAL_DNS_ENABLED=true`
-  - Automatically manages DNS records for VMs
-  - Configurable through hostname field in VM creation
-  - Adds `external-dns.alpha.kubernetes.io/hostname` annotation to Services
-  - Example: `external-dns.alpha.kubernetes.io/hostname: myvm.example.com`
+## Type of Change
+<!-- Mark the appropriate option with an [x] -->
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Documentation update
+- [ ] Code refactoring
+- [ ] Configuration change
 
-- MetalLB Integration:
-  - Enable with `METALLB_ENABLED=true`
-  - Provides LoadBalancer services for VMs
-  - Configurable IP address pools via annotations
-  - Adds `metallb.universe.tf/address-pool` annotation to Services
-  - Example: `metallb.universe.tf/address-pool: production-pool`
-
-### Changed
-- Improved error handling for Git operations
-- Better feedback for configuration issues
-- Updated documentation for new environment variables
-- Enhanced service configuration options
-- Improved network integration capabilities
+## Changes Made
+<!-- List the key changes made in this PR -->
+- 
+- 
+- 
 
 ## Testing Done
-- Verified MetalLB integration with test VM deployments
-- Confirmed ExternalDNS record creation
-- Tested both features in isolation and together
-- Validated error handling for misconfigured scenarios
+<!-- Describe the testing you have performed -->
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Manual testing
 
-## Notes
-- Both features are optional and disabled by default
-- Configuration is done via environment variables
-- Existing deployments without these features will continue to work as before
+## Screenshots (if applicable)
+<!-- Add screenshots to help explain your changes -->
+
+## Related Issues
+<!-- Link any related issues using #issue_number -->
+Fixes #
+
+## Checklist
+<!-- Mark items with [x] as completed -->
+- [ ] My code follows the project's style guidelines
+- [ ] I have performed a self-review of my own code
+- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings
+- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] New and existing unit tests pass locally with my changes
+- [ ] Any dependent changes have been merged and published
