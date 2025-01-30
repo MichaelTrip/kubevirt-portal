@@ -133,7 +133,7 @@ Optional:
 - `EXTERNAL_DNS_ENABLED`: Enable ExternalDNS integration (default: "false")
 - `METALLB_ENABLED`: Enable MetalLB integration (default: "false")
 - `CLUSTER_VMS_ENABLED`: Enable Cluster VMs page (default: "false")
-- `FLASK_DEBUG`: Enable debug mode (default: "false")
+- `DEBUG`: Enable debug mode and verbose logging (default: "false")
 
 ### Resource Requirements
 
