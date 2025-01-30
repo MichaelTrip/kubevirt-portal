@@ -178,6 +178,9 @@ def delete_vm(vm_name):
 @main.route('/cluster-vms', methods=['GET'])
 def cluster_vms():
     """List VMs running in the Kubernetes cluster"""
+    if not Config.CLUSTER_VMS_ENABLED:
+        flash('Cluster VMs feature is not enabled', 'warning')
+        return redirect(url_for('main.vm_list'))
     try:
         vms = list_running_vms()
         return render_template('cluster_vms.html', vms=vms)

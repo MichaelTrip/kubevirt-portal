@@ -53,11 +53,13 @@
                             <i class="bi bi-hdd me-1"></i>Git VMs
                         </a>
                     </li>
+                    {% if config.CLUSTER_VMS_ENABLED %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.cluster_vms') }}">
                             <i class="bi bi-diagram-3 me-1"></i>Cluster VMs
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
