@@ -1,30 +1,31 @@
-# Feature Flags Implementation and Navigation Updates
+# Debug Logging Enhancements and Dependency Updates
 
 ## Description
-This PR implements feature flags for controlling access to certain functionality, particularly the Cluster VMs page. The implementation provides a flexible way to manage feature visibility and access control.
+This PR implements optional debug logging functionality and updates critical dependencies for improved security and performance.
 
-## Changes from CHANGELOG v1.3.1
+## Changes from CHANGELOG [Unreleased]
 
 ### Added
-- Feature flag for Cluster VMs page visibility
-- Conditional navigation menu items based on feature flags
-- Route protection for disabled features
+- Optional debug logging with DEBUG environment variable
+- Improved logging configuration based on DEBUG setting
+- Warning filters for cryptography deprecation messages
 
 ### Changed
-- Updated navigation menu to respect feature flags
-- Improved user feedback for disabled features
+- Updated paramiko to 3.5.0 and cryptography to 42.0.0
+- Improved logging initialization sequence
+- Better handling of environment variables
 
 ## Implementation Details
-- Environment variable based feature flags
-- Protected routes for disabled features
-- Enhanced user feedback when attempting to access disabled features
-- Updated navigation menu that dynamically shows/hides based on feature flags
+- Environment variable based debug control
+- Enhanced logging configuration system
+- Updated dependency management
+- Improved warning handling for deprecated features
 
 ## Testing Done
-- [x] Verified feature flag functionality in development environment
-- [x] Tested all navigation paths with features enabled/disabled
-- [x] Confirmed proper feedback messages for disabled features
-- [x] Validated environment variable handling
+- [x] Verified debug logging functionality
+- [x] Tested with both DEBUG enabled and disabled
+- [x] Confirmed warning filters are working
+- [x] Validated updated dependencies
 
 ## Related Issues
-Implements comprehensive feature flag system for improved feature management
+Implements improved debugging capabilities and security updates
