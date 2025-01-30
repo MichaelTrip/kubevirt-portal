@@ -7,6 +7,9 @@ import sys
 sock = Sock()
 
 def create_app():
+    # Initialize config and validate environment variables first
+    config = Config()
+    
     # Configure logging
     log_level = logging.DEBUG if config.DEBUG else logging.INFO
     logging.basicConfig(
@@ -19,9 +22,6 @@ def create_app():
     )
     logger = logging.getLogger(__name__)
     logger.debug("Starting application initialization")
-
-    # Initialize config and validate environment variables first
-    config = Config()
     try:
         config.validate_config()  # Explicitly validate before creating app
     except EnvironmentError as e:
