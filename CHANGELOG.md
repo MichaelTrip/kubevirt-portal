@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.3] - 2025-02-18
+### Added
+- Git commit hash displayed as version number in UI
+- GitHub repository link in navigation bar
+- Improved version display in navbar with commit hash
+
+### Changed
+- Updated navigation bar layout to include GitHub link
+- Enhanced version number visibility
+
 ## [1.3.2] - 2025-02-18
 ### Added
 - Optional debug logging with DEBUG environment variable
