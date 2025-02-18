@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.3.2] - 2025-02-18
 ### Added
 - Optional debug logging with DEBUG environment variable
 - Improved logging configuration based on DEBUG setting
@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated paramiko to 3.5.0 and cryptography to 42.0.0
 - Improved logging initialization sequence
 - Better handling of environment variables
+
+### Fixed
+- Service port validation for existing configurations
+- Set default subdirectory value from config in edit VM form
+
+## [Unreleased]
 
 ## [1.3.1] - 2025-01-30
 
