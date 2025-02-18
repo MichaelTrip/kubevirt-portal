@@ -340,9 +340,15 @@ def get_service_yaml(service_name):
         return str(e), 500
 
 def get_git_version():
-    """Get the current git commit hash"""
+    """Get the current git version (tag or commit hash)"""
     try:
         repo = git.Repo(search_parent_directories=True)
+        # First try to get the latest tag pointing to HEAD
+        tags = [tag for tag in repo.tags if tag.commit == repo.head.commit]
+        if tags:
+            # Return the most recent tag
+            return str(tags[-1])
+        # If no tag found, fall back to commit hash
         return repo.head.object.hexsha[:7]
     except Exception as e:
         logger.error(f"Error getting git version: {str(e)}")
