@@ -22,7 +22,8 @@ def vm_list():
     try:
         logger.info("Fetching VM list")
         vms = get_vm_list(Config)
-        return render_template('vm_list.html', vms=vms, config=Config)
+        version = get_git_version()
+        return render_template('vm_list.html', vms=vms, config=Config, version=version)
     except Exception as e:
         logger.error(f"Error getting VM list: {str(e)}")
         flash(f"Error getting VM list: {str(e)}", 'error')
@@ -183,7 +184,8 @@ def cluster_vms():
         return redirect(url_for('main.vm_list'))
     try:
         vms = list_running_vms()
-        return render_template('cluster_vms.html', vms=vms)
+        version = get_git_version()
+        return render_template('cluster_vms.html', vms=vms, version=version)
     except Exception as e:
         logger.error(f"Error getting cluster VM list: {str(e)}")
         flash(f"Error getting cluster VM list: {str(e)}", 'error')
@@ -336,6 +338,15 @@ def get_service_yaml(service_name):
     except Exception as e:
         logger.error(f"Error getting Service YAML: {str(e)}")
         return str(e), 500
+
+def get_git_version():
+    """Get the current git commit hash"""
+    try:
+        repo = git.Repo(search_parent_directories=True)
+        return repo.head.object.hexsha[:7]
+    except Exception as e:
+        logger.error(f"Error getting git version: {str(e)}")
+        return "unknown"
 
 def power_vm(vm_name, action):
     """Power on/off a VM"""
