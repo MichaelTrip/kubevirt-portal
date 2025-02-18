@@ -7,9 +7,29 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        :root[data-bs-theme="dark"] {
+            --body-bg: #1a1d20;
+            --body-color: #e9ecef;
+            --form-bg: #2b3035;
+            --form-border: #495057;
+            --form-color: #e9ecef;
+            --card-bg: #2b3035;
+            --pre-bg: #212529;
+        }
+        
+        :root[data-bs-theme="light"] {
+            --body-bg: #ffffff;
+            --body-color: #212529;
+            --form-bg: #ffffff;
+            --form-border: #ced4da;
+            --form-color: #212529;
+            --card-bg: #ffffff;
+            --pre-bg: #f8f9fa;
+        }
+
         body {
-            background-color: #1a1d20;
-            color: #e9ecef;
+            background-color: var(--body-bg);
+            color: var(--body-color);
             font-family: system-ui, -apple-system, "Segoe UI", Roboto;
             min-height: 100vh;
             display: flex;
@@ -19,29 +39,29 @@
             flex: 1;
         }
         .form-control, .form-select {
-            background-color: #2b3035;
-            border-color: #495057;
-            color: #e9ecef;
+            background-color: var(--form-bg);
+            border-color: var(--form-border);
+            color: var(--form-color);
         }
         .form-control:focus, .form-select:focus {
-            background-color: #2b3035;
+            background-color: var(--form-bg);
             border-color: #0d6efd;
-            color: #e9ecef;
+            color: var(--form-color);
         }
         .table {
-            --bs-table-bg: #2b3035;
-            --bs-table-color: #e9ecef;
-            border-color: #495057;
+            --bs-table-bg: var(--form-bg);
+            --bs-table-color: var(--body-color);
+            border-color: var(--form-border);
         }
         .card {
-            background-color: #2b3035;
-            border-color: #495057;
+            background-color: var(--card-bg);
+            border-color: var(--form-border);
         }
         pre {
-            background-color: #212529;
+            background-color: var(--pre-bg);
             padding: 1rem;
             border-radius: 0.375rem;
-            color: #e9ecef;
+            color: var(--body-color);
         }
     </style>
 </head>
@@ -67,14 +87,20 @@
                     </li>
                     {% endif %}
                 </ul>
-                <a href="https://github.com/MichaelTrip/kubevirt-portal" 
-                   class="text-decoration-none text-light d-flex align-items-center"
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   style="font-family: inherit;">
-                    <i class="bi bi-github me-2 fs-4"></i>
-                    <span>View on GitHub</span>
-                </a>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-secondary" id="themeToggle">
+                        <i class="bi bi-moon-fill" id="darkIcon"></i>
+                        <i class="bi bi-sun-fill d-none" id="lightIcon"></i>
+                    </button>
+                    <a href="https://github.com/MichaelTrip/kubevirt-portal" 
+                       class="text-decoration-none text-light d-flex align-items-center"
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       style="font-family: inherit;">
+                        <i class="bi bi-github me-2 fs-4"></i>
+                        <span>View on GitHub</span>
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -91,5 +117,37 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const darkIcon = document.getElementById('darkIcon');
+            const lightIcon = document.getElementById('lightIcon');
+            const html = document.documentElement;
+            
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            html.setAttribute('data-bs-theme', savedTheme);
+            updateIcons(savedTheme);
+            
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = html.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                html.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateIcons(newTheme);
+            });
+            
+            function updateIcons(theme) {
+                if (theme === 'dark') {
+                    darkIcon.classList.remove('d-none');
+                    lightIcon.classList.add('d-none');
+                } else {
+                    darkIcon.classList.add('d-none');
+                    lightIcon.classList.remove('d-none');
+                }
+            }
+        });
+    </script>
 </body>
 </html>
