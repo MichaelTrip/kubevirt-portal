@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.4] - 2025-02-18
+### Added
+- Dark mode and light mode theme support with persistent user preference
+- Theme toggle button in navigation bar
+- Improved UI contrast and readability in both themes
+
+### Fixed
+- Version number display inconsistency in navigation bar
+- Theme persistence across page reloads
+
 ## [1.3.3] - 2025-02-18
 ### Added
 - Git commit hash displayed as version number in UI
