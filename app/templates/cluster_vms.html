@@ -296,20 +296,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // YAML Modal handling
-    const yamlModal = new bootstrap.Modal(document.getElementById('yamlModal'));
+    const yamlModal = document.getElementById('yamlModal');
     const yamlContent = document.getElementById('yamlContent');
+    const bsYamlModal = new bootstrap.Modal(yamlModal);
 
     document.querySelectorAll('.view-yaml').forEach(button => {
         button.addEventListener('click', async function() {
             const vmName = this.dataset.vmName;
             try {
+                yamlContent.textContent = "Loading...";
                 const response = await fetch(`/api/vm/${vmName}/yaml`);
                 const yaml = await response.text();
                 yamlContent.textContent = yaml;
                 hljs.highlightElement(yamlContent);
-                yamlModal.show();
+                bsYamlModal.show();
             } catch (error) {
                 console.error('Error fetching YAML:', error);
+                yamlContent.textContent = `Error fetching YAML: ${error.message}`;
             }
         });
     });
@@ -318,13 +321,15 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', async function() {
             const serviceName = this.dataset.serviceName;
             try {
+                yamlContent.textContent = "Loading...";
                 const response = await fetch(`/api/service/${serviceName}/yaml`);
                 const yaml = await response.text();
                 yamlContent.textContent = yaml;
                 hljs.highlightElement(yamlContent);
-                yamlModal.show();
+                bsYamlModal.show();
             } catch (error) {
                 console.error('Error fetching Service YAML:', error);
+                yamlContent.textContent = `Error fetching Service YAML: ${error.message}`;
             }
         });
     });
