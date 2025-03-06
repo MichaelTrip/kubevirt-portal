@@ -252,7 +252,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <pre><code id="yamlContent"></code></pre>
+                <pre><code id="yamlContent" class="language-yaml"></code></pre>
             </div>
         </div>
     </div>
@@ -306,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch(`/api/vm/${vmName}/yaml`);
                 const yaml = await response.text();
                 yamlContent.textContent = yaml;
+                hljs.highlightElement(yamlContent);
                 yamlModal.show();
             } catch (error) {
                 console.error('Error fetching YAML:', error);
@@ -320,6 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch(`/api/service/${serviceName}/yaml`);
                 const yaml = await response.text();
                 yamlContent.textContent = yaml;
+                hljs.highlightElement(yamlContent);
                 yamlModal.show();
             } catch (error) {
                 console.error('Error fetching Service YAML:', error);

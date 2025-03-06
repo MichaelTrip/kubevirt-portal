@@ -7,7 +7,7 @@
     {% if preview_yaml %}
     <div class="mb-4">
         <h3>Preview YAML</h3>
-        <pre><code>{{ preview_yaml }}</code></pre>
+        <pre><code class="language-yaml">{{ preview_yaml }}</code></pre>
     </div>
     {% endif %}
 
@@ -114,6 +114,16 @@
             <a href="{{ url_for('main.vm_list') }}" class="btn btn-link">Cancel</a>
         </div>
     </form>
+
+    <script>
+        // Initialize syntax highlighting for YAML preview
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeBlocks = document.querySelectorAll('pre code.language-yaml');
+            codeBlocks.forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
 </div>
 
 <script>
