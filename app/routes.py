@@ -34,6 +34,9 @@ def create_vm():
     form = VMForm()
     if request.method == 'GET':
         form.subdirectory.data = Config.YAML_SUBDIRECTORY
+        # Set default address pool if MetalLB is enabled
+        if Config.METALLB_ENABLED:
+            form.address_pool.data = Config.METALLB_DEFAULT_POOL
     if form.validate_on_submit():
         try:
             # Debug logging for service ports

@@ -47,14 +47,16 @@
         </div>
         {% if config.EXTERNAL_DNS_ENABLED %}
         <div class="mb-3">
-            <label class="form-label">Hostname</label>
-            {{ form.hostname(class="form-control", placeholder="Optional - Only used if ExternalDNS is configured") }}
+            <label class="form-label">Hostname (FQDN)</label>
+            {{ form.hostname(class="form-control", id="hostname-field", placeholder="e.g., vm-name." + config.EXTERNAL_DNS_DOMAIN) }}
+            <small class="form-text text-muted">Format: &lt;vm-name&gt;.{{ config.EXTERNAL_DNS_DOMAIN }}</small>
         </div>
         {% endif %}
         {% if config.METALLB_ENABLED %}
         <div class="mb-3">
-            <label class="form-label">Address Pool</label>
-            {{ form.address_pool(class="form-control") }}
+            <label class="form-label">MetalLB Address Pool</label>
+            {{ form.address_pool(class="form-control", placeholder="Default: " + config.METALLB_DEFAULT_POOL) }}
+            <small class="form-text text-muted">MetalLB pool name for external IP allocation</small>
         </div>
         {% endif %}
 

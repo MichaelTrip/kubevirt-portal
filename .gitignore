@@ -7,7 +7,8 @@ __pycache__/
 */__pycache__/
 *.py[cod]
 *.so
-
+venv/
+app/venv/
 # Logs
 *.log
 app.log

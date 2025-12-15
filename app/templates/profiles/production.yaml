@@ -1,0 +1,26 @@
+# Production profile - higher resources and redundancy
+name: production
+description: Production-grade VM configuration with enhanced resources
+
+defaults:
+  cpu_cores: 4
+  memory: 8
+  storage_size: 50
+  storage_class: longhorn-rwx
+  storage_access_mode: ReadWriteMany
+  service_type: LoadBalancer
+  network_config:
+    interface_name: enp1s0
+    enable_dhcp: true
+    enable_ipv6: true
+    ipv6_address: "fd10:0:2::2/120"
+    ipv6_gateway: "fd10:0:2::1"
+
+templates:
+  vm: base/vm-base.yaml.j2
+  service: base/service-base.yaml.j2
+
+validation:
+  max_cpu_cores: 32
+  max_memory_gb: 128
+  max_storage_gb: 4096

@@ -63,9 +63,13 @@ spec:
         name: {{ vm_name }}-pvc
         creationTimestamp: null
       spec:
-{% filter indent(8, True) %}
-{% include 'snippets/storage-config.yaml.j2' %}
-{% endfilter %}
+        storage:
+          resources:
+            requests:
+              storage: {{ storage_size }}Gi
+          accessModes:
+            - {{ storage_access_mode }}
+          storageClassName: {{ storage_class }}
         source:
           http:
             url: {{ image_url }}

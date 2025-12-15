@@ -56,8 +56,9 @@ users:
     </div>
     {% if config.EXTERNAL_DNS_ENABLED %}
     <div class="mb-3">
-        <label class="form-label">Hostname</label>
-        {{ form.hostname(class="form-control", placeholder="Optional - Only used if ExternalDNS is configured") }}
+        <label class="form-label">Hostname (FQDN)</label>
+        {{ form.hostname(class="form-control", id="hostname-field", placeholder="e.g., vm-name." + config.EXTERNAL_DNS_DOMAIN) }}
+        <small class="form-text text-muted">Will auto-populate as: &lt;vm-name&gt;.{{ config.EXTERNAL_DNS_DOMAIN }}</small>
     </div>
     {% endif %}
     <div class="mb-3">
@@ -66,8 +67,9 @@ users:
     </div>
     {% if config.METALLB_ENABLED %}
     <div class="mb-3">
-        <label class="form-label">Address Pool</label>
-        {{ form.address_pool(class="form-control", placeholder="Optional - Only used if MetalLB is configured") }}
+        <label class="form-label">MetalLB Address Pool</label>
+        {{ form.address_pool(class="form-control", placeholder="Default: " + config.METALLB_DEFAULT_POOL) }}
+        <small class="form-text text-muted">MetalLB pool name for external IP allocation</small>
     </div>
     {% endif %}
 
@@ -242,5 +244,28 @@ document.getElementById('vm-tags').addEventListener('click', function(e) {
         }
     }
 });
+
+{% if config.EXTERNAL_DNS_ENABLED %}
+// Auto-populate hostname based on VM name
+const vmNameInput = document.querySelector('input[name="vm_name"]');
+const hostnameInput = document.getElementById('hostname-field');
+const dnsDomain = '{{ config.EXTERNAL_DNS_DOMAIN }}';
+
+if (vmNameInput && hostnameInput) {
+    // Only auto-populate if hostname is empty
+    vmNameInput.addEventListener('input', function() {
+        const vmName = this.value.trim();
+        // Only update if hostname field is empty or matches the pattern
+        if (vmName && (!hostnameInput.value || hostnameInput.value.endsWith('.' + dnsDomain))) {
+            hostnameInput.value = vmName + '.' + dnsDomain;
+        }
+    });
+    
+    // If VM name already has a value on page load, populate hostname
+    if (vmNameInput.value && !hostnameInput.value) {
+        hostnameInput.value = vmNameInput.value + '.' + dnsDomain;
+    }
+}
+{% endif %}
 </script>
 {% endblock %}
