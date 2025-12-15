@@ -28,7 +28,7 @@
     <div id="cardLayout" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for vm in vms %}
         <div class="col">
-            <div class="card h-100 border" style="transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border-radius: 12px; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.08)'">
+            <div class="card h-100 border" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header border-bottom" style="padding: 1.25rem 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%); border-bottom: 1px solid rgba(59, 130, 246, 0.15);">
                     <h5 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="bi bi-pc" style="font-size: 1.2rem; color: #3b82f6;"></i>{{ vm.name }}

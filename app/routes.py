@@ -64,6 +64,11 @@ def create_vm():
                 }
                 tags_data.append(tag_data)
 
+            # Only include hostname and address_pool for LoadBalancer service type
+            service_type = form.service_type.data
+            hostname = form.hostname.data if service_type == 'LoadBalancer' else None
+            address_pool = form.address_pool.data if service_type == 'LoadBalancer' else None
+
             form_data = {
                 'vm_name': form.vm_name.data,
                 'tags': tags_data,
@@ -73,10 +78,10 @@ def create_vm():
                 'storage_class': form.storage_class.data,
                 'image_url': form.image_url.data,
                 'user_data': form.user_data.data,
-                'hostname': form.hostname.data,
-                'address_pool': form.address_pool.data,
+                'hostname': hostname,
+                'address_pool': address_pool,
                 'service_ports': service_ports_data,
-                'service_type': form.service_type.data
+                'service_type': service_type
             }
 
             logger.info(f"Processed service ports: {service_ports_data}")
@@ -140,6 +145,11 @@ def edit_vm(vm_name):
                 }
                 tags_data.append(tag_data)
 
+            # Only include hostname and address_pool for LoadBalancer service type
+            service_type = form.service_type.data
+            hostname = form.hostname.data if service_type == 'LoadBalancer' else None
+            address_pool = form.address_pool.data if service_type == 'LoadBalancer' else None
+
             form_data = {
                 'vm_name': vm_name,
                 'tags': tags_data,
@@ -149,10 +159,10 @@ def edit_vm(vm_name):
                 'storage_class': form.storage_class.data,
                 'image_url': form.image_url.data,
                 'user_data': form.user_data.data,
-                'hostname': form.hostname.data,
-                'address_pool': form.address_pool.data,
+                'hostname': hostname,
+                'address_pool': address_pool,
                 'service_ports': service_ports_data,
-                'service_type': form.service_type.data
+                'service_type': service_type
             }
 
             if 'preview' in request.form:
@@ -215,10 +225,11 @@ def get_vm_yaml(vm_name):
 def terminal(vm_name):
     """Web-based SSH terminal"""
     host = request.args.get('host')
+    embedded = request.args.get('embedded', '0') == '1'
     if not host:
         flash('No host IP provided', 'error')
         return redirect(url_for('main.cluster_vms'))
-    return render_template('terminal.html', vm_name=vm_name, host=host)
+    return render_template('terminal.html', vm_name=vm_name, host=host, embedded=embedded)
 
 
 def init_ssh_client():

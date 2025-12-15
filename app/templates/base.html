@@ -113,6 +113,7 @@
             border-radius: 8px;
             box-shadow: var(--shadow-sm);
             margin-bottom: 1.5rem;
+            transition: none;
         }
 
         .card-header {
@@ -123,8 +124,21 @@
             font-size: 16px;
         }
 
+        /* Subtle, non-moving hover cue on card header */
+        .card:hover .card-header {
+            box-shadow: inset 0 0 0 9999px rgba(59, 130, 246, 0.06);
+        }
+
         .card-body {
             padding: 1.25rem;
+        }
+
+        /* Stabilize modals: no hover/transition-induced movement */
+        .modal,
+        .modal-content,
+        .modal-dialog,
+        .modal-backdrop {
+            transition: none !important;
         }
 
         .btn {
