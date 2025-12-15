@@ -3,164 +3,190 @@
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-diagram-3 me-2"></i>Cluster Virtual Machines</h1>
+        <h2 class="mb-0" style="font-weight: 600;">
+            <i class="bi bi-diagram-3 me-2" style="opacity: 0.7;"></i>Cluster Virtual Machines
+        </h2>
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-secondary active" id="cardView">
-                <i class="bi bi-grid-3x3-gap"></i>
+            <button type="button" class="btn btn-sm btn-outline-secondary active" id="cardView">
+                <i class="bi bi-grid-3x3-gap me-1"></i>Cards
             </button>
-            <button type="button" class="btn btn-outline-secondary" id="tableView">
-                <i class="bi bi-table"></i>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="tableView">
+                <i class="bi bi-table me-1"></i>Table
             </button>
         </div>
     </div>
 
     {% if vms %}
-    <div id="cardLayout" class="row row-cols-1 row-cols-md-2 g-4">
+    <div id="cardLayout" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for vm in vms %}
         <div class="col">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-pc me-2"></i>{{ vm.name }}
+            <div class="card h-100 border" style="transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border-radius: 12px; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.08)'">
+                <div class="card-header border-bottom" style="padding: 1.25rem 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%); border-bottom: 1px solid rgba(59, 130, 246, 0.15);">
+                    <h5 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="bi bi-pc" style="font-size: 1.2rem; color: #3b82f6;"></i>{{ vm.name }}
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-cpu me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">CPU Cores</small>
-                                    <strong>{{ vm.cpu_cores }}</strong>
+                <div class="card-body" style="padding: 1.5rem;">
+                    <div class="row g-3 mb-3" style="margin-bottom: 1.5rem !important;">
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%); padding: 0.875rem; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.1);">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-cpu me-2" style="font-size: 1.1rem; color: #3b82f6; margin-top: 0.125rem;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">CPU</div>
+                                        <div style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 1rem; font-weight: 600;">{{ vm.cpu_cores }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-memory me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Memory</small>
-                                    <strong>{{ vm.memory }}</strong>
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(139, 92, 246, 0.02) 100%); padding: 0.875rem; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.1);">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-memory me-2" style="font-size: 1.1rem; color: #8b5cf6; margin-top: 0.125rem;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">Memory</div>
+                                        <div style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 1rem; font-weight: 600;">{{ vm.memory }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-hdd me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Node</small>
-                                    <strong>{{ vm.vmi.node if vm.vmi else 'N/A' }}</strong>
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%); padding: 0.875rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.1);">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-hdd me-2" style="font-size: 1.1rem; color: #10b981; margin-top: 0.125rem;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">Node</div>
+                                        <div style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 1rem; font-weight: 600;">{{ vm.vmi.node if vm.vmi else 'N/A' }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-globe me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Status</small>
-                                    <strong>
-                                        {% if vm.running %}
-                                        <span class="badge bg-success">Running</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">Stopped</span>
-                                        {% endif %}
-                                    </strong>
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.05) 0%, rgba(234, 88, 12, 0.02) 100%); padding: 0.875rem; border-radius: 8px; border: 1px solid rgba(234, 88, 12, 0.1);">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-activity me-2" style="font-size: 1.1rem; color: #ea580c; margin-top: 0.125rem;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">Status</div>
+                                        <div>
+                                            {% if vm.running %}
+                                            <span style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.375rem 0.625rem; background: rgba(34, 197, 94, 0.15); color: rgb(21, 128, 61); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 600;"><span style="font-size: 0.5rem;">●</span><span>running</span></span>
+                                            {% else %}
+                                            <span style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.375rem 0.625rem; background: rgba(0, 0, 0, 0.06); color: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 600;"><span style="font-size: 0.5rem;">○</span><span>stopped</span></span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <hr>
-                    
-                    <div class="small text-muted mb-3">
-                        <div class="mb-2">
-                            <i class="bi bi-diagram-2 me-2"></i>Pod IP Addresses:
-                            {% if vm.vmi and vm.vmi.ip_addresses %}
-                            {% for ip in vm.vmi.ip_addresses %}
-                            <span class="badge bg-info">{{ ip }}</span>
-                            {% endfor %}
-                            {% else %}
-                            <span class="text-muted">N/A</span>
+                    <div style="border-top: 2px solid rgba(59, 130, 246, 0.1); margin: 0 -1.5rem; padding: 1.25rem 1.5rem 0; background: linear-gradient(180deg, rgba(59, 130, 246, 0.02) 0%, transparent 100%);">
+                        <div style="font-size: 0.8125rem;">
+                            <div class="mb-3">
+                                <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin-bottom: 0.625rem; font-weight: 600;">
+                                    <i class="bi bi-diagram-2 me-1" style="color: #3b82f6;"></i>Pod IPs
+                                </div>
+                                {% if vm.vmi and vm.vmi.ip_addresses %}
+                                <div class="d-flex flex-wrap gap-1">
+                                {% for ip in vm.vmi.ip_addresses %}
+                                <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ ip }}</code>
+                                {% endfor %}
+                                </div>
+                                {% else %}
+                                <span style="opacity: 0.5; font-style: italic;">N/A</span>
+                                {% endif %}
+                            </div>
+                            {% if vm.service %}
+                            <div class="mb-3">
+                                <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin-bottom: 0.625rem; font-weight: 600;">
+                                    <i class="bi bi-hdd-network me-1" style="color: #8b5cf6;"></i>Service
+                                </div>
+                                <div style="padding-left: 0.5rem; border-left: 2px solid var(--border-color, #e5e7eb);">
+                                    <div class="mb-2"><span style="opacity: 0.6; font-size: 0.75rem;">Type:</span> <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ vm.service.type }}</code></div>
+                                    {% if vm.service.annotations and (vm.service.annotations.get('external-dns.alpha.kubernetes.io/hostname') or vm.service.annotations.get('metallb.io/ip-allocated-from-pool')) %}
+                                    <div>
+                                        {% if vm.service.annotations.get('external-dns.alpha.kubernetes.io/hostname') %}
+                                        <div class="mb-2">
+                                            <span style="opacity: 0.6; font-size: 0.75rem;">FQDN:</span>
+                                            <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ vm.service.annotations['external-dns.alpha.kubernetes.io/hostname'] }}</code>
+                                        </div>
+                                        {% endif %}
+                                        {% if vm.service.annotations.get('metallb.io/ip-allocated-from-pool') %}
+                                        <div class="mb-2">
+                                            <span style="opacity: 0.6; font-size: 0.75rem;">Pool:</span>
+                                            <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ vm.service.annotations['metallb.io/ip-allocated-from-pool'] }}</code>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                    {% if vm.service.external_ips %}
+                                    <div class="mb-2"><span style="opacity: 0.6; font-size: 0.75rem;">External IPs:</span>
+                                        <div class="d-flex flex-wrap gap-1 mt-1">
+                                        {% for ip in vm.service.external_ips %}
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ ip }}</code>
+                                        {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    <div class="mb-2"><span style="opacity: 0.6; font-size: 0.75rem;">Cluster IP:</span> <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ vm.service.cluster_ip }}</code></div>
+                                    <div><span style="opacity: 0.6; font-size: 0.75rem;">Ports:</span>
+                                        <div class="d-flex flex-wrap gap-1 mt-1">
+                                        {% for port in vm.service.ports %}
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit; white-space: nowrap;">
+                                            {{ port.name }}: {{ port.port }}:{{ port.target_port }}/{{ port.protocol }}
+                                        </code>
+                                        {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if vm.labels %}
+                            <div>
+                                <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin-bottom: 0.625rem; font-weight: 600;">
+                                    <i class="bi bi-tags me-1" style="color: #10b981;"></i>Labels
+                                </div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for key, value in vm.labels.items() %}
+                                    <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ key }}={{ value }}</code>
+                                    {% endfor %}
+                                </div>
+                            </div>
                             {% endif %}
                         </div>
-                        {% if vm.service %}
-                        <div class="mb-2">
-                            <i class="bi bi-hdd-network me-2"></i>Service Details:
-                            <div class="ms-4">
-                                <div>Type: <span class="badge bg-secondary">{{ vm.service.type }}</span></div>
-                                {% if vm.service.annotations and (vm.service.annotations.get('external-dns.alpha.kubernetes.io/hostname') or vm.service.annotations.get('metallb.io/ip-allocated-from-pool')) %}
-                                <div>
-                                    {% if vm.service.annotations.get('external-dns.alpha.kubernetes.io/hostname') %}
-                                    <div class="small">
-                                        <span>FQDN:</span>
-                                        <span class="badge bg-info">{{ vm.service.annotations['external-dns.alpha.kubernetes.io/hostname'] }}</span>
-                                    </div>
-                                    {% endif %}
-                                    {% if vm.service.annotations.get('metallb.io/ip-allocated-from-pool') %}
-                                    <div class="small">
-                                        <span>IP Pool:</span>
-                                        <span class="badge bg-info">{{ vm.service.annotations['metallb.io/ip-allocated-from-pool'] }}</span>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                                {% if vm.service.external_ips %}
-                                <div>External IPs:
-                                    {% for ip in vm.service.external_ips %}
-                                    <span class="badge bg-primary">{{ ip }}</span>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                <div>Cluster IP: <span class="badge bg-info">{{ vm.service.cluster_ip }}</span></div>
-                                <div>Ports:
-                                    {% for port in vm.service.ports %}
-                                    <span class="badge bg-secondary">
-                                        {{ port.name }}: {{ port.port }}:{{ port.target_port }} ({{ port.protocol }})
-                                    </span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if vm.labels %}
-                        <div>
-                            <i class="bi bi-tags me-2"></i>Labels:
-                            {% for key, value in vm.labels.items() %}
-                            <span class="badge bg-secondary me-1">{{ key }}: {{ value }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
-                <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between gap-2">
-                        <div>
+                <div class="card-footer border-top" style="padding: 1rem 1.5rem; background: linear-gradient(180deg, transparent 0%, rgba(59, 130, 246, 0.02) 100%); border-top: 1px solid rgba(59, 130, 246, 0.15);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
                             {% if vm.running %}
                             <button type="button" class="btn btn-sm btn-danger power-action" data-vm-name="{{ vm.name }}" data-action="stop">
-                                <i class="bi bi-power me-1"></i>Power Off
+                                <i class="bi bi-power me-1"></i>Stop
                             </button>
                             {% else %}
                             <button type="button" class="btn btn-sm btn-success power-action" data-vm-name="{{ vm.name }}" data-action="start">
-                                <i class="bi bi-power me-1"></i>Power On
+                                <i class="bi bi-power me-1"></i>Start
                             </button>
                             {% endif %}
                         </div>
-                        <div>
-                            <button type="button" class="btn btn-sm btn-outline-primary view-yaml" data-vm-name="{{ vm.name }}">
-                                <i class="bi bi-code-square me-1"></i>View VM YAML
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary view-yaml" data-vm-name="{{ vm.name }}">
+                                <i class="bi bi-code-square me-1"></i>VM
                             </button>
                             {% if vm.service %}
-                            <button type="button" class="btn btn-sm btn-outline-info view-service-yaml" data-service-name="{{ vm.name }}">
-                                <i class="bi bi-code-square me-1"></i>View Service YAML
+                            <button type="button" class="btn btn-sm btn-outline-secondary view-service-yaml" data-service-name="{{ vm.name }}">
+                                <i class="bi bi-code-square me-1"></i>Service
                             </button>
                             {% if vm.service.ports and vm.user_data and 'ssh_pwauth: true' in vm.user_data %}
                                 {% set ns = namespace(found=false) %}
                                 {% for port in vm.service.ports %}
                                     {% if port.port == 22 and not ns.found %}
                                         {% set ns.found = true %}
-                                        <a href="{{ url_for('main.terminal', vm_name=vm.name, host=vm.service.external_ips[0] if vm.service.external_ips else vm.service.cluster_ip) }}" class="btn btn-sm btn-outline-success" target="_blank">
-                                            <i class="bi bi-terminal me-1"></i>Web SSH
-                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ssh-button" 
+                                                data-url="{{ url_for('main.terminal', vm_name=vm.name, host=vm.service.external_ips[0] if vm.service.external_ips else vm.service.cluster_ip) }}"
+                                                data-vm-name="{{ vm.name }}">
+                                            <i class="bi bi-terminal me-1"></i>SSH
+                                        </button>
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}
@@ -174,70 +200,88 @@
     </div>
 
     <div id="tableLayout" class="d-none">
-        <div class="card">
+        <div class="card border">
             <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Namespace</th>
-                        <th>Status</th>
-                        <th>CPU</th>
-                        <th>Memory</th>
-                        <th>Node</th>
-                        <th>IP Addresses</th>
-                        <th>Labels</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vm in vms %}
-                    <tr>
-                        <td><i class="bi bi-pc me-2"></i>{{ vm.name }}</td>
-                        <td>{{ vm.namespace }}</td>
-                        <td>
-                            {% if vm.running %}
-                            <span class="badge bg-success">Running</span>
-                            {% else %}
-                            <span class="badge bg-secondary">Stopped</span>
-                            {% endif %}
-                        </td>
-                        <td><i class="bi bi-cpu me-2"></i>{{ vm.cpu_cores }}</td>
-                        <td><i class="bi bi-memory me-2"></i>{{ vm.memory }}</td>
-                        <td>
-                            {% if vm.vmi %}
-                            <span class="badge bg-primary">{{ vm.vmi.node }}</span>
-                            {% else %}
-                            <span class="text-muted">N/A</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if vm.vmi and vm.vmi.ip_addresses %}
-                            {% for ip in vm.vmi.ip_addresses %}
-                            <span class="badge bg-info">{{ ip }}</span>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" style="font-size: 0.875rem;">
+                        <thead style="background-color: var(--surface-bg, #f9fafb); border-bottom: 1px solid var(--border-color, #e5e7eb);">
+                            <tr>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Name</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Namespace</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Status</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">CPU</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Memory</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Node</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">IP Addresses</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Labels</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vm in vms %}
+                            <tr style="border-bottom: 1px solid var(--border-color, #e5e7eb);">
+                                <td style="padding: 0.875rem 1rem;">
+                                    <i class="bi bi-pc me-2" style="opacity: 0.6;"></i>
+                                    <span style="font-weight: 500;">{{ vm.name }}</span>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">{{ vm.namespace }}</td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    <div style="display: flex; align-items: center;">
+                                        {% if vm.running %}
+                                        <span style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(34, 197, 94, 0.1); color: rgb(21, 128, 61); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 0.25rem; line-height: 1; display: flex; align-items: center; gap: 0.25rem;">●<span>running</span></span>
+                                        {% else %}
+                                        <span style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); color: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; line-height: 1; display: flex; align-items: center; gap: 0.25rem;">○<span>stopped</span></span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="bi bi-cpu" style="opacity: 0.5; margin-right: 0.5rem;"></i>
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; background: transparent; color: inherit;">{{ vm.cpu_cores }}</code>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="bi bi-memory" style="opacity: 0.5; margin-right: 0.5rem;"></i>
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; background: transparent; color: inherit;">{{ vm.memory }}</code>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    {% if vm.vmi %}
+                                    <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ vm.vmi.node }}</code>
+                                    {% else %}
+                                    <span style="opacity: 0.5; font-style: italic;">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    {% if vm.vmi and vm.vmi.ip_addresses %}
+                                    {% for ip in vm.vmi.ip_addresses %}
+                                    <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit; display: inline-block; margin: 0.125rem;">{{ ip }}</code>
+                                    {% endfor %}
+                                    {% else %}
+                                    <span style="opacity: 0.5; font-style: italic;">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    {% for key, value in vm.labels.items() %}
+                                    <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit; display: inline-block; margin: 0.125rem;">{{ key }}={{ value }}</code>
+                                    {% endfor %}
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">{{ vm.created }}</td>
+                            </tr>
                             {% endfor %}
-                            {% else %}
-                            <span class="text-muted">N/A</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% for key, value in vm.labels.items() %}
-                            <span class="badge bg-secondary me-1">{{ key }}: {{ value }}</span>
-                            {% endfor %}
-                        </td>
-                        <td>{{ vm.created }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
     {% else %}
-    <div class="card">
+    <div class="card border">
         <div class="card-body text-center py-5">
-            <i class="bi bi-inbox display-1 text-muted mb-3"></i>
-            <h3 class="text-muted">No VMs Found in Cluster</h3>
-            <p class="text-muted mb-0">No virtual machines were found running in the Kubernetes cluster</p>
+            <i class="bi bi-inbox mb-3" style="font-size: 4rem; opacity: 0.3; display: block;"></i>
+            <h3 style="font-weight: 600; opacity: 0.7; margin-bottom: 0.5rem;">No VMs Found in Cluster</h3>
+            <p style="opacity: 0.6; margin-bottom: 0;">No virtual machines were found running in the Kubernetes cluster</p>
         </div>
     </div>
     {% endif %}
@@ -251,8 +295,8 @@
                 <h5 class="modal-title">VM YAML Configuration</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <pre><code id="yamlContent"></code></pre>
+            <div class="modal-body" style="padding: 0;">
+                <pre style="margin: 0; border-radius: 0;"><code id="yamlContent" class="language-yaml" style="display: block; padding: 1.5rem; overflow-x: auto;"></code></pre>
             </div>
         </div>
     </div>
@@ -295,6 +339,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tableView.classList.add('active');
     }
 
+    // Load Highlight.js
+    const hljs = window.hljs;
+
     // YAML Modal handling
     const yamlModal = new bootstrap.Modal(document.getElementById('yamlModal'));
     const yamlContent = document.getElementById('yamlContent');
@@ -306,6 +353,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch(`/api/vm/${vmName}/yaml`);
                 const yaml = await response.text();
                 yamlContent.textContent = yaml;
+                if (hljs) {
+                    delete yamlContent.dataset.highlighted;
+                    hljs.highlightElement(yamlContent);
+                }
                 yamlModal.show();
             } catch (error) {
                 console.error('Error fetching YAML:', error);
@@ -320,10 +371,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch(`/api/service/${serviceName}/yaml`);
                 const yaml = await response.text();
                 yamlContent.textContent = yaml;
+                if (hljs) {
+                    delete yamlContent.dataset.highlighted;
+                    hljs.highlightElement(yamlContent);
+                }
                 yamlModal.show();
             } catch (error) {
                 console.error('Error fetching Service YAML:', error);
             }
+        });
+    });
+
+    // SSH popup window handling
+    document.querySelectorAll('.ssh-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.dataset.url;
+            const vmName = this.dataset.vmName;
+            const width = 1000;
+            const height = 700;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+            window.open(
+                url,
+                `ssh-${vmName}`,
+                `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+            );
         });
     });
 

@@ -3,72 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VM Portal {{ version }}</title>
+    <title>KubeVirt Portal {{ version }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css" rel="stylesheet">
     <style>
         :root[data-bs-theme="dark"] {
-            --body-bg: #1a1d20;
-            --body-color: #e9ecef;
-            --form-bg: #2b3035;
-            --form-border: #495057;
-            --form-color: #e9ecef;
-            --card-bg: #2b3035;
-            --pre-bg: #212529;
+            --body-bg: #0d1117;
+            --body-color: #e6edf3;
+            --surface-bg: #161b22;
+            --surface-hover: #1c2128;
+            --border-color: #30363d;
+            --border-subtle: #21262d;
+            --accent-primary: #2f81f7;
+            --accent-primary-hover: #4493f8;
+            --accent-success: #3fb950;
+            --accent-danger: #f85149;
+            --accent-warning: #d29922;
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --text-tertiary: #656d76;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
         
         :root[data-bs-theme="light"] {
-            --body-bg: #f5f5f5;
-            --body-color: #212529;
-            --form-bg: #ffffff;
-            --form-border: #dee2e6;
-            --form-color: #212529;
-            --card-bg: #ffffff;
-            --pre-bg: #eaeaea;
+            --body-bg: #ffffff;
+            --body-color: #1f2328;
+            --surface-bg: #f6f8fa;
+            --surface-hover: #eaeef2;
+            --border-color: #d1d9e0;
+            --border-subtle: #e1e4e8;
+            --accent-primary: #0969da;
+            --accent-primary-hover: #0550ae;
+            --accent-success: #1a7f37;
+            --accent-danger: #cf222e;
+            --accent-warning: #9a6700;
+            --text-primary: #1f2328;
+            --text-secondary: #636c76;
+            --text-tertiary: #8c959f;
+            --shadow: 0 8px 24px rgba(31, 35, 40, 0.12);
+            --shadow-sm: 0 2px 8px rgba(31, 35, 40, 0.08);
+        }
+
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
 
         body {
             background-color: var(--body-bg);
             color: var(--body-color);
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
+
+        .navbar {
+            background-color: var(--surface-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-primary) !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-brand i {
+            color: var(--accent-primary);
+            font-size: 20px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            background-color: var(--surface-hover);
+            color: var(--text-primary) !important;
+        }
+
+        .nav-link.active {
+            background-color: var(--surface-hover);
+            color: var(--text-primary) !important;
+        }
+
         .container {
             flex: 1;
+            max-width: 1280px;
         }
-        .form-control, .form-select {
-            background-color: var(--form-bg);
-            border-color: var(--form-border);
-            color: var(--form-color);
-        }
-        .form-control:focus, .form-select:focus {
-            background-color: var(--form-bg);
-            border-color: #0d6efd;
-            color: var(--form-color);
-        }
-        .table {
-            --bs-table-bg: var(--form-bg);
-            --bs-table-color: var(--body-color);
-            border-color: var(--form-border);
-        }
+
         .card {
-            background-color: var(--card-bg);
-            border-color: var(--form-border);
+            background-color: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
         }
-        pre {
-            background-color: var(--pre-bg);
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .btn {
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-primary-hover);
+            border-color: var(--accent-primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--accent-success);
+            border-color: var(--accent-success);
+        }
+
+        .btn-danger {
+            background-color: var(--accent-danger);
+            border-color: var(--accent-danger);
+        }
+
+        .btn-outline-secondary {
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+            background-color: transparent;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: var(--surface-hover);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-control, .form-select {
+            background-color: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 14px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--surface-bg);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(47, 129, 247, 0.1);
+            color: var(--text-primary);
+        }
+
+        .form-text {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 0.25rem;
+        }
+
+        .table {
+            background-color: transparent;
+            color: var(--text-primary);
+            border-color: var(--border-color);
+            font-size: 14px;
+        }
+
+        .table thead {
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .table th {
+            font-weight: 600;
+            padding: 0.75rem;
+            background-color: var(--surface-bg);
+            color: var(--text-primary);
+            border: none;
+        }
+
+        .table td {
+            padding: 0.75rem;
+            border-top: 1px solid var(--border-subtle);
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.35rem 0.65rem;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .alert {
+            border-radius: 6px;
+            border: 1px solid;
             padding: 1rem;
-            border-radius: 0.375rem;
-            color: var(--body-color);
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background-color: rgba(63, 185, 80, 0.1);
+            border-color: var(--accent-success);
+            color: var(--accent-success);
+        }
+
+        .alert-danger {
+            background-color: rgba(248, 81, 73, 0.1);
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
+        }
+
+        .alert-warning {
+            background-color: rgba(210, 153, 34, 0.1);
+            border-color: var(--accent-warning);
+            color: var(--accent-warning);
+        }
+
+        pre {
+            background-color: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        code {
+            background-color: var(--surface-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 85%;
+            color: var(--text-primary);
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .github-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .github-link:hover {
+            background-color: var(--surface-hover);
+            color: var(--text-primary);
+        }
+
+        #themeToggle {
+            padding: 0.5rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-group-text {
+            background-color: var(--surface-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .navbar-toggler {
+            border-color: var(--border-color);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(125, 133, 144, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="/"><i class="bi bi-hdd-rack-fill me-2"></i>VM Portal <small class="text-secondary">{{ version }}</small></a>
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-boxes"></i>
+                <span>KubeVirt Portal</span>
+                <span class="badge bg-secondary ms-2" style="font-size: 10px;">{{ version }}</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -76,29 +344,30 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.vm_list') }}">
-                            <i class="bi bi-hdd me-1"></i>Git VMs
+                            <i class="bi bi-git"></i>
+                            <span>Git VMs</span>
                         </a>
                     </li>
                     {% if config.CLUSTER_VMS_ENABLED %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.cluster_vms') }}">
-                            <i class="bi bi-diagram-3 me-1"></i>Cluster VMs
+                            <i class="bi bi-diagram-3"></i>
+                            <span>Cluster VMs</span>
                         </a>
                     </li>
                     {% endif %}
                 </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-outline-secondary" id="themeToggle">
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary" id="themeToggle" title="Toggle theme">
                         <i class="bi bi-moon-fill" id="darkIcon"></i>
                         <i class="bi bi-sun-fill d-none" id="lightIcon"></i>
                     </button>
                     <a href="https://github.com/MichaelTrip/kubevirt-portal" 
-                       class="text-decoration-none text-light d-flex align-items-center"
+                       class="github-link"
                        target="_blank" 
-                       rel="noopener noreferrer"
-                       style="font-family: inherit;">
-                        <i class="bi bi-github me-2 fs-4"></i>
-                        <span>View on GitHub</span>
+                       rel="noopener noreferrer">
+                        <i class="bi bi-github"></i>
+                        <span class="d-none d-md-inline">GitHub</span>
                     </a>
                 </div>
             </div>
@@ -149,5 +418,7 @@
             }
         });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
 </body>
 </html>
