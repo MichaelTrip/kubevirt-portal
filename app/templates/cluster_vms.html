@@ -318,35 +318,6 @@
     </div>
 </div>
 
-<!-- SSH Terminal Modal -->
-<div class="modal" id="sshModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="sshModalTitle">SSH Terminal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="padding: 0; height: 70vh;">
-                <iframe id="sshIframe" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- VM VNC Modal -->
-<div class="modal" id="vncModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="vncModalTitle">VNC</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="padding: 0; height: 70vh;">
-                <iframe id="vncIframe" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -464,29 +435,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Power management
-    document.querySelectorAll('.power-action').forEach(button => {
-        button.addEventListener('click', async function() {
-            const vmName = this.dataset.vmName;
-            const action = this.dataset.action;
-            if (confirm(`Are you sure you want to ${action} VM ${vmName}?`)) {
-                try {
-                    const response = await fetch(`/api/vm/${vmName}/power/${action}`, {
-                        method: 'POST'
-                    });
-                    if (response.ok) {
-                        // Reload the page to show updated status
-                        window.location.reload();
-                    } else {
-                        alert(`Failed to ${action} VM: ${await response.text()}`);
-                    }
-                } catch (error) {
-                    console.error(`Error ${action}ing VM:`, error);
-                    alert(`Error ${action}ing VM: ${error.message}`);
-                }
-            }
+    // VNC popup handling (normal browser popup, not a modal)
+    document.querySelectorAll('.vnc-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const openUrl = this.dataset.url + '&embedded=1';
+            const features = [
+              'popup=yes', 'toolbar=no', 'location=no', 'menubar=no', 'status=no',
+              'scrollbars=yes', 'resizable=yes',
+              `width=${Math.min(screen.availWidth, 1280)}`,
+              `height=${Math.min(screen.availHeight, 800)}`
+            ].join(',');
+            const win = window.open(openUrl, 'kubevirt-vnc', features);
+            if (win) { try { win.focus(); } catch(e){} }
         });
     });
-});
-</script>
-{% endblock %}
+    document.querySelectorAll('.vnc-button').forEach(button => {
