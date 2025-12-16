@@ -399,38 +399,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // SSH modal handling
-    const sshModal = new bootstrap.Modal(document.getElementById('sshModal'));
-    const sshIframe = document.getElementById('sshIframe');
-    const sshModalTitle = document.getElementById('sshModalTitle');
-    
+    // SSH popup handling (normal browser popup, not a modal)
     document.querySelectorAll('.ssh-button').forEach(button => {
         button.addEventListener('click', function() {
-            const url = this.dataset.url + '&embedded=1';
-            const vmName = this.dataset.vmName;
-            sshModalTitle.textContent = `SSH Terminal - ${vmName}`;
-            sshIframe.src = url;
-            sshModal.show();
-        });
-    });
-    
-    // Clear iframe when modal is closed
-    document.getElementById('sshModal').addEventListener('hidden.bs.modal', function() {
-        sshIframe.src = '';
-    });
-
-    // VNC popup handling (normal browser popup, not a modal)
-    document.querySelectorAll('.vnc-button').forEach(button => {
-        button.addEventListener('click', function() {
-            // Use the embedded viewer we control, which connects reliably
             const openUrl = this.dataset.url + '&embedded=1';
             const features = [
               'popup=yes', 'toolbar=no', 'location=no', 'menubar=no', 'status=no',
               'scrollbars=yes', 'resizable=yes',
-              `width=${Math.min(screen.availWidth, 1280)}`,
+              `width=${Math.min(screen.availWidth, 1200)}`,
               `height=${Math.min(screen.availHeight, 800)}`
             ].join(',');
-            const win = window.open(openUrl, 'kubevirt-vnc', features);
+            const win = window.open(openUrl, 'kubevirt-ssh', features);
             if (win) { try { win.focus(); } catch(e){} }
         });
     });
@@ -449,4 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (win) { try { win.focus(); } catch(e){} }
         });
     });
-    document.querySelectorAll('.vnc-button').forEach(button => {
+});
+</script>
+{% endblock %}
