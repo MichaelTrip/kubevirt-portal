@@ -404,65 +404,66 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', async function() {
             const vmName = this.dataset.vmName;
             const action = this.dataset.action; // 'start' or 'stop'
-            // Optimistic UI: disable button to prevent double clicks
+            const isStart = action === 'start';
+            // Prevent double-clicks
             this.disabled = true;
-            // Update button and status inline
             const originalLabel = this.innerHTML;
+            // Update button label
+            this.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${isStart ? 'Starting…' : 'Stopping…'}`;
+            // Update status pill to transitional state
             const statusEl = document.querySelector(`.vm-status[data-vm-name="${vmName}"]`);
             const statusTextEl = statusEl ? statusEl.querySelector('.vm-status-text') : null;
             const statusDotEl = statusEl ? statusEl.querySelector('.vm-status-dot') : null;
-            const isStart = action === 'start';
-            this.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${isStart ? 'Starting…' : 'Stopping…'}`;
             if (statusEl && statusTextEl && statusDotEl) {
                 statusTextEl.textContent = isStart ? 'starting…' : 'shutting down…';
-                statusEl.style.background = 'rgba(234, 179, 8, 0.15)'; // amber
+                statusEl.style.background = 'rgba(234, 179, 8, 0.15)';
                 statusEl.style.color = 'rgb(161, 98, 7)';
                 statusEl.style.border = '1px solid rgba(234, 179, 8, 0.3)';
                 statusDotEl.textContent = '●';
             }
             try {
-                const resp = await fetch(`/api/vm/${vmName}/power/${action}`, {
-                    method: 'POST'
-                });
+                const resp = await fetch(`/api/vm/${vmName}/power/${action}`, { method: 'POST' });
                 if (!resp.ok) {
                     const text = await resp.text();
-                    throw new Error(text || `Power action failed (${resp.status})`);
+                    throw new Error(text || `HTTP ${resp.status}`);
                 }
-                // Poll VM/VMI state until it reaches desired state or timeout
+                // Poll for state
                 const desiredRunning = isStart;
-                const deadline = Date.now() + 45000; // 45s timeout
+                const deadline = Date.now() + 45000;
                 const delay = (ms) => new Promise(r => setTimeout(r, ms));
                 let reached = false;
                 while (Date.now() < deadline) {
                     try {
-                        const sj = await fetch(`/api/vmi/${vmName}/status`);
-                        if (sj.ok) {
-                            const s = await sj.json();
-                            // Update interim status messages based on VMI phase
+                        const r = await fetch(`/api/vmi/${vmName}/status`);
+                        if (r.ok) {
+                            const s = await r.json();
+                            // Interim messaging
                             if (statusEl && statusTextEl) {
-                                const phase = s.vmi_phase;
-                                if (phase === 'Scheduling' || phase === 'Pending') {
+                                const phase = String(s.vmi_phase || '').toLowerCase();
+                                if (phase === 'scheduling' || phase === 'pending') {
                                     statusTextEl.textContent = 'scheduling…';
-                                } else if (phase === 'Running') {
-                                    statusTextEl.textContent = desiredRunning ? 'starting…' : 'shutting down…';
-                                } else if (phase === 'Succeeded') {
-                                    statusTextEl.textContent = 'stopped';
-                                } else if (phase === 'Failed') {
+                                } else if (phase === 'running') {
+                                    statusTextEl.textContent = desiredRunning ? (s.ready ? 'running' : 'starting…') : 'shutting down…';
+                                } else if (phase === 'failed') {
                                     statusTextEl.textContent = 'error';
                                     statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
                                     statusEl.style.color = 'rgb(185, 28, 28)';
                                     statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
                                 }
                             }
-                            if (typeof s.spec_running === 'boolean') {
-                                if (s.spec_running === desiredRunning) { reached = true; break; }
+                            const phaseLower = String(s.vmi_phase || '').toLowerCase();
+                            if (desiredRunning) {
+                                if (s.spec_running === true && phaseLower === 'running' && s.ready === true) { reached = true; break; }
+                            } else {
+                                // Consider reached when VM spec is false and VMI is not running
+                                if (s.spec_running === false && phaseLower !== 'running') { reached = true; break; }
                             }
                         }
                     } catch {}
                     await delay(1500);
                 }
                 if (reached) {
-                    // Update status pill to final state and swap button
+                    // Update status pill and swap button to next action
                     if (statusEl && statusTextEl && statusDotEl) {
                         if (desiredRunning) {
                             statusTextEl.textContent = 'running';
@@ -478,13 +479,21 @@ document.addEventListener('DOMContentLoaded', function() {
                             statusDotEl.textContent = '○';
                         }
                     }
-                    // Swap power button to opposite action
-                    this.classList.toggle('btn-danger', desiredRunning === false);
-                    this.classList.toggle('btn-success', desiredRunning === true);
-                    this.dataset.action = desiredRunning ? 'stop' : 'start';
-                    this.innerHTML = desiredRunning ? '<i class="bi bi-power me-1"></i>Stop' : '<i class="bi bi-power me-1"></i>Start';
+                    this.classList.remove('btn-success', 'btn-danger');
+                    if (desiredRunning) {
+                        // VM is now running - next action Stop
+                        this.classList.add('btn-danger');
+                        this.dataset.action = 'stop';
+                        this.innerHTML = '<i class="bi bi-power me-1"></i>Stop';
+                    } else {
+                        // VM is now stopped - next action Start
+                        this.classList.add('btn-success');
+                        this.dataset.action = 'start';
+                        this.innerHTML = '<i class="bi bi-power me-1"></i>Start';
+                    }
+                    this.disabled = false;
                 } else {
-                    // Fallback: reload to reflect server state
+                    // Fallback sync
                     window.location.reload();
                 }
             } catch (err) {
@@ -492,7 +501,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.disabled = false;
                 this.innerHTML = originalLabel;
                 if (statusEl && statusTextEl && statusDotEl) {
-                    // revert to unknown/neutral state
                     statusTextEl.textContent = 'unknown';
                     statusEl.style.background = 'rgba(31, 41, 55, 0.08)';
                     statusEl.style.color = 'rgb(55, 65, 81)';
