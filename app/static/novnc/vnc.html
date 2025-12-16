@@ -34,86 +34,18 @@
     // Initialize the standard noVNC UI
     const ui = new UI();
     // Provide connection info
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <title>noVNC Console</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <style>
-        html, body { height:100%; }
-        body { margin:0; background:#000; display:flex; flex-direction:column; }
-        .toolbar { display:flex; gap:.5rem; align-items:center; padding:.5rem; background:#111; color:#ddd; border-bottom: 1px solid #222; }
-        .toolbar .spacer { flex:1; }
-        .toolbar button { padding:.35rem .6rem; font-size:.9rem; border:1px solid #333; background:#1a1a1a; color:#eee; border-radius:4px; cursor:pointer; }
-        .toolbar button:hover { background:#222; }
-        #vnc { width:100%; height:calc(100vh - 44px); background:#000; overflow:hidden; }
-        .status { font-size:.85rem; opacity:.8; }
-      </style>
-    </head>
-    <body>
-      <div class="toolbar">
-        <strong>noVNC</strong>
-        <span class="status" id="status">Connecting…</span>
-        <div class="spacer"></div>
-        <button id="fit">Fit to window</button>
-        <button id="native">1:1</button>
-        <button id="clip">Toggle clip</button>
-        <button id="cad">Ctrl+Alt+Del</button>
-        <button id="fs">Fullscreen</button>
-      </div>
-      <div id="vnc"></div>
-      <script type="module">
-        import RFB from 'https://esm.sh/@novnc/novnc@1.5.0/lib/rfb.js';
-        const params = new URLSearchParams(location.search);
-        const path = params.get('path') || '/vnc/ws';
-        const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-        const url = `${scheme}://${location.host}${path}`;
+    ui.addConnection({
+      url,
+      password: params.get('password') || '',
+    });
 
-        const rfb = new RFB(document.getElementById('vnc'), url);
-        rfb.viewOnly = params.get('view_only') === 'true' ? true : false;
-        rfb.scaleViewport = (params.get('resize') || 'scale') === 'scale';
-        rfb.clipViewport = false;
-        rfb.resizeSession = rfb.scaleViewport;
-        rfb.background = '#000';
+    // Apply basic settings
+    ui.rfb?.addEventListener('connect', () => console.log('Connected'));
+    ui.rfb?.addEventListener('disconnect', e => console.warn('Disconnected', e));
 
-        const statusEl = document.getElementById('status');
-        rfb.addEventListener('connect', () => { statusEl.textContent = 'Connected'; });
-        rfb.addEventListener('disconnect', e => { statusEl.textContent = 'Disconnected'; console.warn('VNC disconnected', e); });
-
-        const vncEl = document.getElementById('vnc');
-        const fitBtn = document.getElementById('fit');
-        const nativeBtn = document.getElementById('native');
-        const clipBtn = document.getElementById('clip');
-        const cadBtn = document.getElementById('cad');
-        const fsBtn = document.getElementById('fs');
-
-        fitBtn.addEventListener('click', () => {
-          rfb.scaleViewport = true;
-          rfb.clipViewport = false;
-          rfb.resizeSession = true;
-          vncEl.style.overflow = 'hidden';
-        });
-        nativeBtn.addEventListener('click', () => {
-          rfb.scaleViewport = false;
-          rfb.clipViewport = false;
-          rfb.resizeSession = false;
-          vncEl.style.overflow = 'auto';
-        });
-        clipBtn.addEventListener('click', () => {
-          rfb.clipViewport = !rfb.clipViewport;
-          // When clipping off, allow container scroll; when on, hide scrollbars
-          vncEl.style.overflow = rfb.clipViewport ? 'hidden' : 'auto';
-        });
-        cadBtn.addEventListener('click', () => { try { rfb.sendCtrlAltDel(); } catch (e) {} });
-        fsBtn.addEventListener('click', () => {
-          const el = document.documentElement;
-          if (!document.fullscreenElement) el.requestFullscreen?.(); else document.exitFullscreen?.();
-        });
-
-        if (params.get('autoconnect') === 'true') {
-          // RFB connects on creation; nothing to do
-        }
-      </script>
-    </body>
-    </html>
+    if (settings.autoconnect) {
+      ui.connect(url, settings.password || '');
+    }
+  </script>
+</body>
+</html>

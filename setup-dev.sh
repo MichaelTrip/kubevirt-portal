@@ -155,3 +155,19 @@ fi
 echo ""
 echo "For detailed documentation, see DEVELOPMENT.md"
 echo ""
+
+# Optional: Fetch noVNC assets for offline usage
+read -p "Download local noVNC UI assets for offline use? [y/N] " RESP
+if [[ "$RESP" =~ ^[Yy]$ ]]; then
+    echo "Downloading noVNC (v1.5.0) assets..."
+    NOVNC_VER="v1.5.0"
+    TMPDIR=$(mktemp -d)
+    curl -L -o "$TMPDIR/novnc.tar.gz" "https://github.com/novnc/noVNC/archive/refs/tags/${NOVNC_VER}.tar.gz"
+    mkdir -p "$TMPDIR/novnc"
+    tar -xzf "$TMPDIR/novnc.tar.gz" -C "$TMPDIR/novnc" --strip-components=1
+    mkdir -p app/static/novnc
+    cp -r "$TMPDIR/novnc/app" app/static/novnc/app
+    cp -r "$TMPDIR/novnc/core" app/static/novnc/core
+    rm -rf "$TMPDIR"
+    echo "✓ noVNC assets installed to app/static/novnc/"
+fi
