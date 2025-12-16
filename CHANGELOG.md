@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VNC viewer keyboard and mouse-wheel zoom shortcuts
 - Action bar compacting (dropdown for YAML buttons)
 
+## [1.4.1] - 2025-12-16
+### Fixed
+- VNC opens in a normal resizable popup window instead of a modal.
+- Default noVNC controls retained; embedded viewer scales correctly.
+- 1:1 mode no longer causes double scrollbars; clip-off shows full content.
+
+### Changed
+- Removed unused SSH/VNC modal markup and handlers from cluster view.
+
 ## [1.4.0] - 2025-12-16
 ### Added
 - KubeVirt console support with WebSocket proxy (serial/VNC backend groundwork).
