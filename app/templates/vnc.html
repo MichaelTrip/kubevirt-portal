@@ -2,121 +2,140 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VNC - {{ vm_name }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        html, body { height: 100%; }
-        body { margin:0; padding:0; background:#000; }
-        #vnc { width: 100%; height: 70vh; background: #000; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VNC - {{ vm_name }}</title>
+  <style>
+    html, body { height: 100%; }
+    /* Prevent outer page scrollbar to avoid double-scroll */
+    body { margin:0; padding:0; background:#000; display:flex; flex-direction:column; overflow:hidden; }
+    .toolbar { display:flex; gap:.5rem; align-items:center; padding:.5rem; background:#111; color:#ddd; border-bottom: 1px solid #222; }
+    .toolbar .spacer { flex:1; }
+    .toolbar button { padding:.35rem .6rem; font-size:.9rem; border:1px solid #333; background:#1a1a1a; color:#eee; border-radius:4px; cursor:pointer; }
+    .toolbar button:hover { background:#222; }
+    /* The VNC container can provide its own scroll in 1:1 mode */
+    #vnc { width: 100%; height: calc(100vh - 44px); background: #000; overflow:hidden; }
+    .status { font-size:.85rem; opacity:.8; }
+  </style>
 </head>
 <body>
-    <div class="container-fluid py-2">
-        <div class="d-flex gap-2 align-items-center mb-2">
-            <button id="zoomIn" class="btn btn-sm btn-outline-light" title="Zoom in"><i class="bi bi-zoom-in"></i></button>
-            <button id="zoomOut" class="btn btn-sm btn-outline-light" title="Zoom out"><i class="bi bi-zoom-out"></i></button>
-            <button id="zoomReset" class="btn btn-sm btn-outline-light" title="Reset zoom"><i class="bi bi-aspect-ratio"></i></button>
-            <button id="zoomFit" class="btn btn-sm btn-outline-light" title="Fit to window"><i class="bi bi-arrows-fullscreen"></i></button>
-        </div>
-        <div id="vnc"></div>
-    </div>
-    <script type="module">
-    // Use esm.sh to load noVNC as an ES module with proper CORS
-    import RFB from 'https://esm.sh/@novnc/novnc@1.5.0/lib/rfb.js';
-    const url = `${(location.protocol === 'https:' ? 'wss:' : 'ws:')}//${location.host}/vnc/ws?vm_name={{ vm_name }}&namespace={{ namespace }}`;
-    const rfb = new RFB(document.getElementById('vnc'), url);
-    rfb.viewOnly = false;
-    rfb.scaleViewport = true; // default to fit-to-window
+  <div class="toolbar">
+    <strong>{{ vm_name }}</strong>
+    <span class="status" id="status">Connecting…</span>
+    <div class="spacer"></div>
+    <button id="fit">Fit to window</button>
+    <button id="native">1:1</button>
+    <button id="clip">Toggle clip</button>
+    <button id="cad">Ctrl+Alt+Del</button>
+    <button id="fs">Fullscreen</button>
+  </div>
+  <div id="vnc"></div>
+  <script type="module">
+  import RFB from 'https://esm.sh/@novnc/novnc@1.5.0/lib/rfb.js';
+  const url = `${(location.protocol === 'https:' ? 'wss:' : 'ws:')}//${location.host}/vnc/ws?vm_name={{ vm_name }}&namespace={{ namespace }}`;
+  const rfb = new RFB(document.getElementById('vnc'), url);
+  rfb.viewOnly = false;
+  rfb.scaleViewport = true;
+  rfb.clipViewport = false;
+  rfb.resizeSession = true;
+  rfb.background = '#000';
+
+  const statusEl = document.getElementById('status');
+  rfb.addEventListener('connect', () => { statusEl.textContent = 'Connected'; });
+  rfb.addEventListener('disconnect', e => { statusEl.textContent = 'Disconnected'; console.error('VNC disconnected', e); });
+
+  const vncEl = document.getElementById('vnc');
+
+  document.getElementById('fit').addEventListener('click', () => {
+    rfb.scaleViewport = true;
     rfb.clipViewport = false;
-    rfb.resizeSession = true; // request remote desktop resize to viewport
-    rfb.background = '#000';
-
-    let scale = 1.0;
-    const applyManualScale = () => {
-        rfb.scaleViewport = false;
-        rfb.clipViewport = true;
-        // noVNC library exposes Display as rfb._display; setting scale adjusts zoom
-        rfb._display.scale = scale;
-    };
-
-    document.getElementById('zoomIn').addEventListener('click', () => {
-        scale = Math.min(3.0, Number((scale + 0.1).toFixed(2)));
-        applyManualScale();
-    });
-    document.getElementById('zoomOut').addEventListener('click', () => {
-        scale = Math.max(0.2, Number((scale - 0.1).toFixed(2)));
-        applyManualScale();
-    });
-    document.getElementById('zoomReset').addEventListener('click', () => {
-        scale = 1.0;
-        applyManualScale();
-    });
-    document.getElementById('zoomFit').addEventListener('click', () => {
-        rfb.scaleViewport = true;
-        rfb.clipViewport = false;
-    });
-
-    rfb.addEventListener('connect', () => { console.log('VNC connected'); });
-    rfb.addEventListener('disconnect', e => { console.error('VNC disconnected', e); });
-    rfb.addEventListener('credentialsrequired', () => { /* handle creds if needed */ });
-    </script>
+    // In fit mode, allow server-side resize to match window
+    rfb.resizeSession = true;
+    // Avoid inner scrollbars in fit mode
+    vncEl.style.overflow = 'hidden';
+  });
+  document.getElementById('native').addEventListener('click', () => {
+    rfb.scaleViewport = false;
+    rfb.clipViewport = false;
+    // In 1:1 mode, keep the remote resolution fixed
+    rfb.resizeSession = false;
+    // Provide a single scrollbar at the container level to avoid double-scroll
+    vncEl.style.overflow = 'auto';
+  });
+  document.getElementById('clip').addEventListener('click', () => {
+    rfb.clipViewport = !rfb.clipViewport;
+  });
+  document.getElementById('cad').addEventListener('click', () => {
+    try { rfb.sendCtrlAltDel(); } catch (e) { console.warn(e); }
+  });
+  document.getElementById('fs').addEventListener('click', () => {
+    const el = document.documentElement;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  });
+  </script>
 </body>
 </html>
 {% else %}
-{% extends "base.html" %}
-
-{% block content %}
-<div class="container">
-    <h1>VNC: {{ vm_name }}</h1>
-    <div class="d-flex gap-2 align-items-center mb-2">
-        <button id="zoomIn" class="btn btn-sm btn-outline-secondary" title="Zoom in"><i class="bi bi-zoom-in"></i></button>
-        <button id="zoomOut" class="btn btn-sm btn-outline-secondary" title="Zoom out"><i class="bi bi-zoom-out"></i></button>
-        <button id="zoomReset" class="btn btn-sm btn-outline-secondary" title="Reset zoom"><i class="bi bi-aspect-ratio"></i></button>
-        <button id="zoomFit" class="btn btn-sm btn-outline-secondary" title="Fit to window"><i class="bi bi-arrows-fullscreen"></i></button>
-    </div>
-    <div id="vnc" style="width: 100%; height: 70vh; background: #000;"></div>
-</div>
-
-<script type="module">
-import RFB from 'https://esm.sh/@novnc/novnc@1.5.0/lib/rfb.js';
-const url = `${(location.protocol === 'https:' ? 'wss:' : 'ws:')}//${location.host}/vnc/ws?vm_name={{ vm_name }}&namespace={{ namespace }}`;
-const rfb = new RFB(document.getElementById('vnc'), url);
-rfb.viewOnly = false;
-rfb.scaleViewport = true; // default to fit-to-window
-rfb.clipViewport = false;
-rfb.resizeSession = true; // request remote desktop resize to viewport
-rfb.background = '#000';
-
-let scale = 1.0;
-const applyManualScale = () => {
-    rfb.scaleViewport = false;
-    rfb.clipViewport = true;
-    rfb._display.scale = scale;
-};
-
-document.getElementById('zoomIn').addEventListener('click', () => {
-    scale = Math.min(3.0, Number((scale + 0.1).toFixed(2)));
-    applyManualScale();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open VNC</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    .wrap { padding: 16px; }
+    .hint { color: #666; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Opening VNC…</h1>
+    <p class="hint">If the popup is blocked, click the button below.</p>
+    <button id="openVncLink">Open Console</button>
+  </div>
+<script>
+// Use the default noVNC UI app page and point it to our WS proxy via path
+// Open our embedded viewer (with full controls) in a normal popup window
+const openUrl = `${location.origin}/vnc/{{ vm_name }}?namespace={{ namespace }}&embedded=1`;
+// Attempt auto popout in a WINDOW (not a tab) with resizable features
+const features = [
+  'popup=yes',
+  'toolbar=no',
+  'location=no',
+  'menubar=no',
+  'status=no',
+  'scrollbars=yes',
+  'resizable=yes',
+  `width=${Math.min(screen.availWidth, 1280)}`,
+  `height=${Math.min(screen.availHeight, 800)}`
+].join(',');
+const win = window.open(openUrl, 'kubevirt-vnc', features);
+if (win) {
+  try {
+    win.focus();
+    // Close the current page to leave only the popout
+    window.close();
+  } catch (e) {}
+}
+// Ensure user-gesture fallback always works via button
+const link = document.getElementById('openVncLink');
+link.addEventListener('click', (e) => {
+  e.preventDefault();
+  const w = window.open(openUrl, 'kubevirt-vnc', features);
+  if (w) {
+    try { w.focus(); } catch {}
+    setTimeout(() => { try { window.close(); } catch {} }, 100);
+  } else {
+    // As a fallback, navigate current tab
+    location.href = openUrl;
+  }
 });
-document.getElementById('zoomOut').addEventListener('click', () => {
-    scale = Math.max(0.2, Number((scale - 0.1).toFixed(2)));
-    applyManualScale();
-});
-document.getElementById('zoomReset').addEventListener('click', () => {
-    scale = 1.0;
-    applyManualScale();
-});
-document.getElementById('zoomFit').addEventListener('click', () => {
-    rfb.scaleViewport = true;
-    rfb.clipViewport = false;
-});
-
-rfb.addEventListener('connect', () => { console.log('VNC connected'); });
-rfb.addEventListener('disconnect', e => { console.error('VNC disconnected', e); });
-rfb.addEventListener('credentialsrequired', () => { /* handle creds if needed */ });
 </script>
-{% endblock %}
+</body>
+</html>
 {% endif %}

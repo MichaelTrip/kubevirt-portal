@@ -448,23 +448,20 @@ document.addEventListener('DOMContentLoaded', function() {
         sshIframe.src = '';
     });
 
-    // VNC modal handling
-    const vncModal = new bootstrap.Modal(document.getElementById('vncModal'));
-    const vncIframe = document.getElementById('vncIframe');
-    const vncModalTitle = document.getElementById('vncModalTitle');
-
+    // VNC popup handling (normal browser popup, not a modal)
     document.querySelectorAll('.vnc-button').forEach(button => {
         button.addEventListener('click', function() {
-            const url = this.dataset.url + '&embedded=1';
-            const vmName = this.dataset.vmName;
-            vncModalTitle.textContent = `VNC - ${vmName}`;
-            vncIframe.src = url;
-            vncModal.show();
+            // Use the embedded viewer we control, which connects reliably
+            const openUrl = this.dataset.url + '&embedded=1';
+            const features = [
+              'popup=yes', 'toolbar=no', 'location=no', 'menubar=no', 'status=no',
+              'scrollbars=yes', 'resizable=yes',
+              `width=${Math.min(screen.availWidth, 1280)}`,
+              `height=${Math.min(screen.availHeight, 800)}`
+            ].join(',');
+            const win = window.open(openUrl, 'kubevirt-vnc', features);
+            if (win) { try { win.focus(); } catch(e){} }
         });
-    });
-
-    document.getElementById('vncModal').addEventListener('hidden.bs.modal', function() {
-        vncIframe.src = '';
     });
 
     // Power management
