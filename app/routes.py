@@ -692,6 +692,148 @@ def get_service_yaml(service_name):
         logger.error(f"Error getting Service YAML: {str(e)}")
         return str(e), 500
 
+@main.route('/api/vmi/<vm_name>/status', methods=['GET'], endpoint='vmi_status_api')
+def vmi_status_api(vm_name):
+    """Return lightweight status for VM/VMI to drive UI polling.
+    Includes VM spec.running, VMI phase, node, and IPs if available.
+    Namespace defaults to 'virtualmachines'.
+    """
+    namespace = request.args.get('namespace', 'virtualmachines')
+    try:
+        core_v1, custom_api = get_kubernetes_client()
+        # VM spec.running
+        spec_running = None
+        try:
+            vm = custom_api.get_namespaced_custom_object(
+                group="kubevirt.io",
+                version="v1",
+                namespace=namespace,
+                plural="virtualmachines",
+                name=vm_name
+            )
+            spec_running = bool(vm.get('spec', {}).get('running'))
+        except Exception:
+            # VM may not exist or be inaccessible
+            spec_running = None
+
+        # VMI phase and details
+        vmi_phase = None
+        node = None
+        ip_addresses = []
+        ready = None
+        primary_ip = None
+        try:
+            vmi = custom_api.get_namespaced_custom_object(
+                group="kubevirt.io",
+                version="v1",
+                namespace=namespace,
+                plural="virtualmachineinstances",
+                name=vm_name
+            )
+            vmi_phase = vmi.get('status', {}).get('phase')
+            node = vmi.get('status', {}).get('nodeName')
+            interfaces = vmi.get('status', {}).get('interfaces', [])
+            if isinstance(ip_addresses, list):
+                # Collect IP + IPs fields from interfaces
+                ips = []
+                for itf in interfaces:
+                    if 'ip' in itf and itf['ip']:
+                        ips.append(itf['ip'])
+                        if not primary_ip:
+                            primary_ip = itf['ip']
+                    if 'ips' in itf and isinstance(itf['ips'], list):
+                        ips.extend([ip for ip in itf['ips'] if ip])
+                ip_addresses = ips
+            else:
+                ip_addresses = []
+            # Ready condition
+            conditions = vmi.get('status', {}).get('conditions', [])
+            if isinstance(conditions, list):
+                for cond in conditions:
+                    if cond.get('type') == 'Ready':
+                        ready = (cond.get('status') == 'True')
+                        break
+        except Exception:
+            # VMI may not exist during scheduling/stop
+            vmi_phase = None
+            node = None
+            ip_addresses = []
+            ready = None
+            primary_ip = None
+
+        payload = {
+            'vm_name': vm_name,
+            'namespace': namespace,
+            'spec_running': spec_running,
+            'vmi_phase': vmi_phase,
+            'node': node,
+            'ip_addresses': ip_addresses,
+            'primary_ip': primary_ip,
+            'ready': ready,
+        }
+        return Response(json.dumps(payload), mimetype='application/json')
+    except Exception as e:
+        logger.error(f"Error getting VMI status for {vm_name}: {str(e)}")
+        return str(e), 500
+
+@main.route('/api/vmi/<vm_name>/status', methods=['GET'])
+def get_vmi_status(vm_name):
+    """Return minimal status info for the VMI associated with a VM.
+    Defaults to namespace 'virtualmachines'.
+    """
+    try:
+        namespace = request.args.get('namespace', 'virtualmachines')
+        core_v1, custom_api = get_kubernetes_client()
+        # Try to read the VMI; it exists only when VM is (or was) running
+        try:
+            vmi = custom_api.get_namespaced_custom_object(
+                group="kubevirt.io",
+                version="v1",
+                namespace=namespace,
+                plural="virtualmachineinstances",
+                name=vm_name
+            )
+        except Exception:
+            vmi = None
+
+        # Also get the VM to read spec.running quickly
+        try:
+            vm = custom_api.get_namespaced_custom_object(
+                group="kubevirt.io",
+                version="v1",
+                namespace=namespace,
+                plural="virtualmachines",
+                name=vm_name
+            )
+        except Exception:
+            vm = None
+
+        resp = {
+            'vm_name': vm_name,
+            'namespace': namespace,
+            'spec_running': bool(vm and vm.get('spec', {}).get('running', False)),
+            'vmi_phase': None,
+            'node': None,
+            'ip_addresses': []
+        }
+        if vmi:
+            status = vmi.get('status', {})
+            resp['vmi_phase'] = status.get('phase')
+            # node name
+            resp['node'] = status.get('nodeName')
+            # Collect IPs
+            addrs = []
+            for iface in status.get('interfaces', []) or []:
+                if 'ipAddress' in iface:
+                    addrs.append(iface['ipAddress'])
+                if 'ipAddresses' in iface and isinstance(iface['ipAddresses'], list):
+                    addrs.extend([ip for ip in iface['ipAddresses'] if ip])
+            resp['ip_addresses'] = addrs
+        return Response(json.dumps(resp), mimetype='application/json')
+    except Exception as e:
+        logger.error(f"Error getting VMI status: {str(e)}")
+        return str(e), 500
+
 def get_git_version():
     """Get the current git version (tag or commit hash)"""
     try:

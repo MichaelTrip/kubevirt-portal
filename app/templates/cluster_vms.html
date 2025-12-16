@@ -69,10 +69,10 @@
                                         <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">Status</div>
                                         <div>
                                             {% if vm.running %}
-                                            <span style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.375rem 0.625rem; background: rgba(34, 197, 94, 0.15); color: rgb(21, 128, 61); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 600;"><span style="font-size: 0.5rem;">●</span><span>running</span></span>
-                                            {% else %}
-                                            <span style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.375rem 0.625rem; background: rgba(0, 0, 0, 0.06); color: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 600;"><span style="font-size: 0.5rem;">○</span><span>stopped</span></span>
-                                            {% endif %}
+                                                <span class="vm-status" data-vm-name="{{ vm.name }}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.375rem 0.625rem; background: rgba(34, 197, 94, 0.15); color: rgb(21, 128, 61); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 600;"><span class="vm-status-dot" style="font-size: 0.5rem;">●</span><span class="vm-status-text">running</span></span>
+                                                {% else %}
+                                                <span class="vm-status" data-vm-name="{{ vm.name }}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.375rem 0.625rem; background: rgba(31, 41, 55, 0.08); color: rgb(55, 65, 81); border: 1px solid rgba(31, 41, 55, 0.25); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 600;"><span class="vm-status-dot" style="font-size: 0.5rem;">○</span><span class="vm-status-text">stopped</span></span>
+                                                {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -245,9 +245,9 @@
                                 <td style="padding: 0.875rem 1rem;">
                                     <div style="display: flex; align-items: center;">
                                         {% if vm.running %}
-                                        <span style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(34, 197, 94, 0.1); color: rgb(21, 128, 61); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 0.25rem; line-height: 1; display: flex; align-items: center; gap: 0.25rem;">●<span>running</span></span>
+                                        <span class="vm-status" data-vm-name="{{ vm.name }}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(34, 197, 94, 0.1); color: rgb(21, 128, 61); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 0.25rem; line-height: 1; display: flex; align-items: center; gap: 0.25rem;"><span class="vm-status-dot">●</span><span class="vm-status-text">running</span></span>
                                         {% else %}
-                                        <span style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); color: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; line-height: 1; display: flex; align-items: center; gap: 0.25rem;">○<span>stopped</span></span>
+                                        <span class="vm-status" data-vm-name="{{ vm.name }}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(31, 41, 55, 0.08); color: rgb(55, 65, 81); border: 1px solid rgba(31, 41, 55, 0.25); border-radius: 0.25rem; line-height: 1; display: flex; align-items: center; gap: 0.25rem;"><span class="vm-status-dot">○</span><span class="vm-status-text">stopped</span></span>
                                         {% endif %}
                                     </div>
                                 </td>
@@ -398,6 +398,183 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Power control (start/stop)
+    document.querySelectorAll('.power-action').forEach(button => {
+        button.addEventListener('click', async function() {
+            const vmName = this.dataset.vmName;
+            const action = this.dataset.action; // 'start' or 'stop'
+            // Optimistic UI: disable button to prevent double clicks
+            this.disabled = true;
+            // Update button and status inline
+            const originalLabel = this.innerHTML;
+            const statusEl = document.querySelector(`.vm-status[data-vm-name="${vmName}"]`);
+            const statusTextEl = statusEl ? statusEl.querySelector('.vm-status-text') : null;
+            const statusDotEl = statusEl ? statusEl.querySelector('.vm-status-dot') : null;
+            const isStart = action === 'start';
+            this.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${isStart ? 'Starting…' : 'Stopping…'}`;
+            if (statusEl && statusTextEl && statusDotEl) {
+                statusTextEl.textContent = isStart ? 'starting…' : 'shutting down…';
+                statusEl.style.background = 'rgba(234, 179, 8, 0.15)'; // amber
+                statusEl.style.color = 'rgb(161, 98, 7)';
+                statusEl.style.border = '1px solid rgba(234, 179, 8, 0.3)';
+                statusDotEl.textContent = '●';
+            }
+            try {
+                const resp = await fetch(`/api/vm/${vmName}/power/${action}`, {
+                    method: 'POST'
+                });
+                if (!resp.ok) {
+                    const text = await resp.text();
+                    throw new Error(text || `Power action failed (${resp.status})`);
+                }
+                // Poll VM/VMI state until it reaches desired state or timeout
+                const desiredRunning = isStart;
+                const deadline = Date.now() + 45000; // 45s timeout
+                const delay = (ms) => new Promise(r => setTimeout(r, ms));
+                let reached = false;
+                while (Date.now() < deadline) {
+                    try {
+                        const sj = await fetch(`/api/vmi/${vmName}/status`);
+                        if (sj.ok) {
+                            const s = await sj.json();
+                            // Update interim status messages based on VMI phase
+                            if (statusEl && statusTextEl) {
+                                const phase = s.vmi_phase;
+                                if (phase === 'Scheduling' || phase === 'Pending') {
+                                    statusTextEl.textContent = 'scheduling…';
+                                } else if (phase === 'Running') {
+                                    statusTextEl.textContent = desiredRunning ? 'starting…' : 'shutting down…';
+                                } else if (phase === 'Succeeded') {
+                                    statusTextEl.textContent = 'stopped';
+                                } else if (phase === 'Failed') {
+                                    statusTextEl.textContent = 'error';
+                                    statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                                    statusEl.style.color = 'rgb(185, 28, 28)';
+                                    statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                                }
+                            }
+                            if (typeof s.spec_running === 'boolean') {
+                                if (s.spec_running === desiredRunning) { reached = true; break; }
+                            }
+                        }
+                    } catch {}
+                    await delay(1500);
+                }
+                if (reached) {
+                    // Update status pill to final state and swap button
+                    if (statusEl && statusTextEl && statusDotEl) {
+                        if (desiredRunning) {
+                            statusTextEl.textContent = 'running';
+                            statusEl.style.background = 'rgba(34, 197, 94, 0.15)';
+                            statusEl.style.color = 'rgb(21, 128, 61)';
+                            statusEl.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+                            statusDotEl.textContent = '●';
+                        } else {
+                            statusTextEl.textContent = 'stopped';
+                            statusEl.style.background = 'rgba(31, 41, 55, 0.08)';
+                            statusEl.style.color = 'rgb(55, 65, 81)';
+                            statusEl.style.border = '1px solid rgba(31, 41, 55, 0.25)';
+                            statusDotEl.textContent = '○';
+                        }
+                    }
+                    // Swap power button to opposite action
+                    this.classList.toggle('btn-danger', desiredRunning === false);
+                    this.classList.toggle('btn-success', desiredRunning === true);
+                    this.dataset.action = desiredRunning ? 'stop' : 'start';
+                    this.innerHTML = desiredRunning ? '<i class="bi bi-power me-1"></i>Stop' : '<i class="bi bi-power me-1"></i>Start';
+                } else {
+                    // Fallback: reload to reflect server state
+                    window.location.reload();
+                }
+            } catch (err) {
+                console.error('Power action error:', err);
+                this.disabled = false;
+                this.innerHTML = originalLabel;
+                if (statusEl && statusTextEl && statusDotEl) {
+                    // revert to unknown/neutral state
+                    statusTextEl.textContent = 'unknown';
+                    statusEl.style.background = 'rgba(31, 41, 55, 0.08)';
+                    statusEl.style.color = 'rgb(55, 65, 81)';
+                    statusEl.style.border = '1px solid rgba(31, 41, 55, 0.25)';
+                    statusDotEl.textContent = '○';
+                }
+                alert(`Failed to ${action} VM ${vmName}: ${err.message}`);
+            }
+        });
+    });
+
+    // Real-time status polling for all VMs (card and table views)
+    const statusEls = Array.from(document.querySelectorAll('.vm-status'));
+    const vmNames = [...new Set(statusEls.map(el => el.dataset.vmName))];
+    function applyStatus(el, data) {
+        const textEl = el.querySelector('.vm-status-text');
+        const dotEl = el.querySelector('.vm-status-dot');
+        if (!textEl || !dotEl) return;
+        const phase = (data.vmi_phase || '').toLowerCase();
+        const running = data.spec_running === true;
+        const ready = data.ready === true;
+        // Decide display text
+        let displayText = 'unknown';
+        if (phase) {
+            if (phase.includes('schedule') || phase === 'pending') {
+                displayText = 'scheduling…';
+            } else if (phase === 'running') {
+                displayText = ready ? 'running' : 'starting…';
+            } else if (phase === 'succeeded') {
+                displayText = 'stopped';
+            } else if (phase === 'failed') {
+                displayText = 'error';
+            } else {
+                displayText = phase;
+            }
+        } else {
+            displayText = running ? 'running' : 'stopped';
+        }
+        textEl.textContent = displayText;
+        // Style
+        if (displayText === 'running') {
+            el.style.background = 'rgba(34, 197, 94, 0.15)';
+            el.style.color = 'rgb(21, 128, 61)';
+            el.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+            dotEl.textContent = '●';
+        } else if (displayText === 'stopped') {
+            el.style.background = 'rgba(0, 0, 0, 0.06)';
+            el.style.color = 'rgba(0, 0, 0, 0.6)';
+            el.style.border = '1px solid rgba(0, 0, 0, 0.15)';
+            dotEl.textContent = '○';
+        } else if (displayText === 'error') {
+            el.style.background = 'rgba(239, 68, 68, 0.15)';
+            el.style.color = 'rgb(185, 28, 28)';
+            el.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            dotEl.textContent = '●';
+        } else {
+            // transitional (scheduling/starting…)
+            el.style.background = 'rgba(234, 179, 8, 0.15)';
+            el.style.color = 'rgb(161, 98, 7)';
+            el.style.border = '1px solid rgba(234, 179, 8, 0.3)';
+            dotEl.textContent = '●';
+        }
+        // Optional: show primary IP or node tooltip
+        if (data.primary_ip || data.node) {
+            el.title = [data.primary_ip, data.node].filter(Boolean).join(' • ');
+        }
+    }
+    async function pollStatuses() {
+        for (const name of vmNames) {
+            try {
+                const r = await fetch(`/api/vmi/${name}/status`);
+                if (!r.ok) continue;
+                const data = await r.json();
+                statusEls.filter(el => el.dataset.vmName === name).forEach(el => applyStatus(el, data));
+            } catch {}
+        }
+    }
+    // Initial poll and interval
+    if (vmNames.length > 0) {
+        pollStatuses();
+        setInterval(pollStatuses, 5000);
+    }
 
     // SSH popup handling (normal browser popup, not a modal)
     document.querySelectorAll('.ssh-button').forEach(button => {
