@@ -125,6 +125,10 @@ def edit_vm(vm_name):
         if request.method == 'GET':
             vm_config = get_vm_config(Config, vm_name)
             form = VMForm(data=vm_config)
+            # Align defaults with create flow
+            form.subdirectory.data = Config.YAML_SUBDIRECTORY
+            if Config.METALLB_ENABLED and not (form.address_pool.data or (vm_config or {}).get('address_pool')):
+                form.address_pool.data = Config.METALLB_DEFAULT_POOL
             return render_template('edit_vm.html', form=form, vm_name=vm_name, config=Config)
 
         form = VMForm()

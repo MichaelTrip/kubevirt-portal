@@ -46,14 +46,14 @@
             {{ form.user_data(class="form-control", rows="10") }}
         </div>
         {% if config.EXTERNAL_DNS_ENABLED %}
-        <div class="mb-3">
+        <div class="mb-3" id="hostname-field-wrapper">
             <label class="form-label">Hostname (FQDN)</label>
             {{ form.hostname(class="form-control", id="hostname-field", placeholder="e.g., vm-name." + config.EXTERNAL_DNS_DOMAIN) }}
             <small class="form-text text-muted">Format: &lt;vm-name&gt;.{{ config.EXTERNAL_DNS_DOMAIN }}</small>
         </div>
         {% endif %}
         {% if config.METALLB_ENABLED %}
-        <div class="mb-3">
+        <div class="mb-3" id="address-pool-wrapper">
             <label class="form-label">MetalLB Address Pool</label>
             {{ form.address_pool(class="form-control", placeholder="Default: " + config.METALLB_DEFAULT_POOL) }}
             <small class="form-text text-muted">MetalLB pool name for external IP allocation</small>
@@ -156,6 +156,50 @@ document.getElementById('vm-tags').addEventListener('click', function(e) {
             const row = e.target.closest('.tag-entry');
             row.remove();
         }
+    }
+});
+
+// Prefill hostname and address_pool when switching to LoadBalancer
+document.addEventListener('DOMContentLoaded', function() {
+    const serviceTypeSelect = document.querySelector('select[name="service_type"]');
+    const hostnameInput = document.querySelector('input[name="hostname"]');
+    const addressPoolInput = document.querySelector('input[name="address_pool"]');
+    const vmNameInput = document.querySelector('input[name="vm_name"]');
+    const hostnameWrapper = document.getElementById('hostname-field-wrapper');
+    const addressPoolWrapper = document.getElementById('address-pool-wrapper');
+
+    function applyLoadBalancerDefaults() {
+        if (!serviceTypeSelect || serviceTypeSelect.value !== 'LoadBalancer') return;
+        // Hostname: <vm-name>.<domain> if ExternalDNS enabled
+        {% if config.EXTERNAL_DNS_ENABLED %}
+        const vm = (vmNameInput && vmNameInput.value || '').trim();
+        const domain = '{{ config.EXTERNAL_DNS_DOMAIN }}';
+        if (hostnameInput && (!hostnameInput.value || hostnameInput.value.trim() === '')) {
+            if (vm && domain) hostnameInput.value = `${vm}.${domain}`;
+        }
+        {% endif %}
+        // Address pool: default if MetalLB enabled
+        {% if config.METALLB_ENABLED %}
+        if (addressPoolInput && (!addressPoolInput.value || addressPoolInput.value.trim() === '')) {
+            addressPoolInput.value = '{{ config.METALLB_DEFAULT_POOL }}';
+        }
+        {% endif %}
+    }
+
+    function updateVisibility() {
+        const isLB = serviceTypeSelect && serviceTypeSelect.value === 'LoadBalancer';
+        if (hostnameWrapper) hostnameWrapper.style.display = isLB ? '' : 'none';
+        if (addressPoolWrapper) addressPoolWrapper.style.display = isLB ? '' : 'none';
+    }
+
+    if (serviceTypeSelect) {
+        serviceTypeSelect.addEventListener('change', function() {
+            updateVisibility();
+            if (this.value === 'LoadBalancer') applyLoadBalancerDefaults();
+        });
+        // Apply once on load in case form initializes without values
+        updateVisibility();
+        applyLoadBalancerDefaults();
     }
 });
 </script>
