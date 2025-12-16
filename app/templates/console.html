@@ -1,0 +1,93 @@
+{% if embedded %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VM Console - {{ vm_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+    <style>
+        body { margin:0; padding:0; overflow:hidden; background:#000; }
+        #terminal-container { height: 100vh; display:flex; flex-direction:column; }
+        #terminal { flex:1; padding:10px; }
+    </style>
+</head>
+<body>
+    <div id="terminal-container">
+        <div id="terminal"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script>
+    (function() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    })();
+
+    const term = new Terminal({ cursorBlink: true, theme: { background:'#000000', foreground:'#ffffff' } });
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal'));
+    fitAddon.fit();
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/console/ws?vm_name={{ vm_name }}&namespace={{ namespace }}`);
+
+    ws.onmessage = (event) => { term.write(event.data); };
+    ws.onopen = () => {
+        term.focus();
+        // Send initial size
+        try {
+            ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+        } catch (e) { /* ignore */ }
+    };
+    ws.onclose = () => { term.write('\r\nConsole disconnected\r\n'); };
+    ws.onerror = (err) => { console.error('Console WS error:', err); term.write('\r\nConsole error\r\n'); };
+
+    term.onData(data => { ws.send(data); });
+
+    window.addEventListener('resize', () => {
+        fitAddon.fit();
+        try {
+            ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+        } catch (e) { /* ignore */ }
+    });
+    </script>
+</body>
+</html>
+{% else %}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Console: {{ vm_name }}</h1>
+    <div id="terminal" style="height: 600px; background: #000; padding: 10px; border-radius: 5px;"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+
+<script>
+const term = new Terminal({ cursorBlink: true, theme: { background:'#000000', foreground:'#ffffff' } });
+const fitAddon = new FitAddon.FitAddon();
+term.loadAddon(fitAddon);
+term.open(document.getElementById('terminal'));
+fitAddon.fit();
+
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const ws = new WebSocket(`${protocol}//${window.location.host}/console/ws?vm_name={{ vm_name }}&namespace={{ namespace }}`);
+
+ws.onmessage = (event) => { term.write(event.data); };
+ws.onopen = () => { term.focus(); };
+ws.onclose = () => { term.write('\r\nConsole disconnected\r\n'); };
+ws.onerror = (err) => { console.error('Console WS error:', err); term.write('\r\nConsole error\r\n'); };
+
+term.onData(data => { ws.send(data); });
+
+window.addEventListener('resize', () => { fitAddon.fit(); });
+</script>
+{% endblock %}
+{% endif %}

@@ -157,7 +157,7 @@
                     </div>
                 </div>
                 <div class="card-footer border-top" style="padding: 1rem 1.5rem; background: linear-gradient(180deg, transparent 0%, rgba(59, 130, 246, 0.02) 100%); border-top: 1px solid rgba(59, 130, 246, 0.15);">
-                    {% set has_ssh = vm.service and vm.service.type == 'LoadBalancer' and vm.service.ports and vm.user_data and 'ssh_pwauth: true' in vm.user_data %}
+                    {% set has_ssh = vm.service and vm.service.type == 'LoadBalancer' and vm.service.ports %}
                     {% if has_ssh %}
                         {% set ns = namespace(found=false) %}
                         {% for port in vm.service.ports %}
@@ -169,19 +169,38 @@
                     {% else %}
                         {% set has_ssh = false %}
                     {% endif %}
-                    
-                    <div style="display: flex; {% if has_ssh %}justify-content: space-between;{% endif %} align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            {% if vm.running %}
-                            <button type="button" class="btn btn-sm btn-danger power-action" data-vm-name="{{ vm.name }}" data-action="stop" style="white-space: nowrap;">
-                                <i class="bi bi-power me-1"></i>Stop
-                            </button>
-                            {% else %}
-                            <button type="button" class="btn btn-sm btn-success power-action" data-vm-name="{{ vm.name }}" data-action="start" style="white-space: nowrap;">
-                                <i class="bi bi-power me-1"></i>Start
-                            </button>
-                            {% endif %}
-                            {% if not has_ssh %}
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <!-- Row 1: Power + VNC (left), SSH (right) -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 0 0 auto;">
+                                {% if vm.running %}
+                                <button type="button" class="btn btn-sm btn-danger power-action" data-vm-name="{{ vm.name }}" data-action="stop" style="white-space: nowrap;">
+                                    <i class="bi bi-power me-1"></i>Stop
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-sm btn-success power-action" data-vm-name="{{ vm.name }}" data-action="start" style="white-space: nowrap;">
+                                    <i class="bi bi-power me-1"></i>Start
+                                </button>
+                                {% endif %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary vnc-button" 
+                                        data-url="{{ url_for('main.vnc', vm_name=vm.name, namespace=vm.namespace) }}" 
+                                        data-vm-name="{{ vm.name }}" style="white-space: nowrap;">
+                                    <i class="bi bi-display me-1"></i>VNC
+                                </button>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 0 0 auto;">
+                                {% if has_ssh %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary ssh-button" 
+                                        data-url="{{ url_for('main.terminal', vm_name=vm.name, host=vm.service.external_ips[0] if vm.service.external_ips else vm.service.cluster_ip) }}"
+                                        data-vm-name="{{ vm.name }}" style="white-space: nowrap;">
+                                    <i class="bi bi-terminal me-1"></i>SSH
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Row 2: YAML buttons -->
+                        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                             <button type="button" class="btn btn-sm btn-outline-secondary view-yaml" data-vm-name="{{ vm.name }}" style="white-space: nowrap;">
                                 <i class="bi bi-code-square me-1"></i>VM
                             </button>
@@ -190,23 +209,7 @@
                                 <i class="bi bi-code-square me-1"></i>Service
                             </button>
                             {% endif %}
-                            {% endif %}
                         </div>
-                        {% if has_ssh %}
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <button type="button" class="btn btn-sm btn-outline-secondary view-yaml" data-vm-name="{{ vm.name }}" style="white-space: nowrap;">
-                                <i class="bi bi-code-square me-1"></i>VM
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary view-service-yaml" data-service-name="{{ vm.name }}" style="white-space: nowrap;">
-                                <i class="bi bi-code-square me-1"></i>Service
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary ssh-button" 
-                                    data-url="{{ url_for('main.terminal', vm_name=vm.name, host=vm.service.external_ips[0] if vm.service.external_ips else vm.service.cluster_ip) }}"
-                                    data-vm-name="{{ vm.name }}" style="white-space: nowrap;">
-                                <i class="bi bi-terminal me-1"></i>SSH
-                            </button>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -330,6 +333,21 @@
     </div>
 </div>
 
+<!-- VM VNC Modal -->
+<div class="modal" id="vncModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="vncModalTitle">VNC</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 0; height: 70vh;">
+                <iframe id="vncIframe" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const cardView = document.getElementById('cardView');
@@ -428,6 +446,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Clear iframe when modal is closed
     document.getElementById('sshModal').addEventListener('hidden.bs.modal', function() {
         sshIframe.src = '';
+    });
+
+    // VNC modal handling
+    const vncModal = new bootstrap.Modal(document.getElementById('vncModal'));
+    const vncIframe = document.getElementById('vncIframe');
+    const vncModalTitle = document.getElementById('vncModalTitle');
+
+    document.querySelectorAll('.vnc-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.dataset.url + '&embedded=1';
+            const vmName = this.dataset.vmName;
+            vncModalTitle.textContent = `VNC - ${vmName}`;
+            vncIframe.src = url;
+            vncModal.show();
+        });
+    });
+
+    document.getElementById('vncModal').addEventListener('hidden.bs.modal', function() {
+        vncIframe.src = '';
     });
 
     // Power management
