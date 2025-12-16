@@ -56,20 +56,24 @@ jobs:
         id: changelog
         run: |
           VERSION=${{ env.VERSION }}
-          CHANGELOG_ENTRY=$(awk -v ver="$VERSION" '/^## \[/ {p=0} /^## \['${VERSION}'\]/ {p=1;next} p' CHANGELOG.md)
-          echo "CHANGELOG_ENTRY<<EOF" >> $GITHUB_ENV
-          echo "$CHANGELOG_ENTRY" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          # Extract the specific version section from CHANGELOG.md
+          awk -v ver="$VERSION" '
+            /^## \[/ { if (found) exit } 
+            /^## \[' ver '\]/ { found=1; next } 
+            { if (found) print }
+          ' CHANGELOG.md > RELEASE_NOTES.md || true
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "## $VERSION" > RELEASE_NOTES.md
+            echo "Release notes not found in CHANGELOG.md" >> RELEASE_NOTES.md
+          fi
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
-        if: success()
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           name: Release ${{ env.VERSION }}
           tag_name: v${{ env.VERSION }}
-          body: ${{ env.CHANGELOG_ENTRY }}
+          body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
-          fail_on_unmatched_files: true

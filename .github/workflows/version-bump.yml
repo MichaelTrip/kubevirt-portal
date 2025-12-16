@@ -1,0 +1,99 @@
+name: Version Bump on PR Merge
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Node (for conventional tools)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Determine last tag
+        id: lasttag
+        run: |
+          set -e
+          if git describe --tags --abbrev=0 >/dev/null 2>&1; then
+            LAST_TAG=$(git describe --tags --abbrev=0)
+          else
+            LAST_TAG="v0.0.0"
+          fi
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+          echo "Last tag: $LAST_TAG"
+
+      - name: Recommended bump (Conventional Commits)
+        id: bump
+        run: |
+          set -e
+          # Install conventional-recommended-bump without local package.json
+          npx --yes conventional-recommended-bump -p angular --commit-path . > bump.txt || true
+          BUMP_TYPE=$(cat bump.txt | tr -d '\n\r' | sed 's/.*type: \([^,}]*\).*/\1/' | sed 's/"//g')
+          if [ -z "$BUMP_TYPE" ]; then
+            # Fallback: try plain output (older versions print just the type)
+            BUMP_TYPE=$(cat bump.txt | tr -d '\n\r')
+          fi
+          if [ -z "$BUMP_TYPE" ]; then
+            BUMP_TYPE="patch"
+          fi
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "Bump type: $BUMP_TYPE"
+
+      - name: Compute next version
+        id: nextver
+        run: |
+          set -e
+          LAST_TAG="${{ steps.lasttag.outputs.last_tag }}"
+          BUMP="${{ steps.bump.outputs.bump_type }}"
+          LAST_VER=${LAST_TAG#v}
+          MAJOR=$(echo $LAST_VER | cut -d. -f1)
+          MINOR=$(echo $LAST_VER | cut -d. -f2)
+          PATCH=$(echo $LAST_VER | cut -d. -f3)
+          case "$BUMP" in
+            major)
+              MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor)
+              MINOR=$((MINOR+1)); PATCH=0 ;;
+            *)
+              PATCH=$((PATCH+1)) ;;
+          esac
+          NEXT_VER="$MAJOR.$MINOR.$PATCH"
+          echo "next_version=$NEXT_VER" >> $GITHUB_OUTPUT
+          echo "Next version: $NEXT_VER"
+
+      - name: Create and push tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          NEXT_TAG="v${{ steps.nextver.outputs.next_version }}"
+          # Ensure we are on main and up to date (use the base ref of the PR)
+          git fetch --tags origin ${{ github.event.pull_request.base.ref }}
+          git checkout ${{ github.event.pull_request.base.ref }}
+          git pull --ff-only origin ${{ github.event.pull_request.base.ref }}
+          # Create tag and push
+          git tag -a "$NEXT_TAG" -m "Release $NEXT_TAG"
+          git push origin "$NEXT_TAG"
+
+      - name: Summary
+        run: |
+          echo "Bumped to v${{ steps.nextver.outputs.next_version }} and pushed tag. Release workflow will publish."
