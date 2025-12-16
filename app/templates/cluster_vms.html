@@ -203,11 +203,11 @@
 
                         <!-- Row 2: YAML buttons -->
                         <div style="display: flex; justify-content: flex-start; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-sm btn-outline-secondary view-yaml" data-vm-name="{{ vm.name }}" style="white-space: nowrap;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary view-yaml" data-vm-name="{{ vm.name }}" data-namespace="{{ vm.namespace }}" style="white-space: nowrap;">
                                 <i class="bi bi-code-square me-1"></i>VM
                             </button>
                             {% if vm.service %}
-                            <button type="button" class="btn btn-sm btn-outline-secondary view-service-yaml" data-service-name="{{ vm.name }}" style="white-space: nowrap;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary view-service-yaml" data-service-name="{{ vm.name }}" data-namespace="{{ vm.namespace }}" style="white-space: nowrap;">
                                 <i class="bi bi-code-square me-1"></i>Service
                             </button>
                             {% endif %}
@@ -382,8 +382,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.view-service-yaml').forEach(button => {
         button.addEventListener('click', async function() {
             const serviceName = this.dataset.serviceName;
+            const ns = this.dataset.namespace || 'virtualmachines';
             try {
-                const response = await fetch(`/api/service/${serviceName}/yaml`);
+                const response = await fetch(`/api/service/${encodeURIComponent(serviceName)}/yaml?namespace=${encodeURIComponent(ns)}`);
                 const yaml = await response.text();
                 yamlContent.textContent = yaml;
                 if (hljs) {

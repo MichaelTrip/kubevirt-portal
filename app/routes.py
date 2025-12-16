@@ -684,14 +684,19 @@ def vm_power(vm_name, action):
 
 @main.route('/api/service/<service_name>/yaml', methods=['GET'])
 def get_service_yaml(service_name):
-    """Get raw YAML for a Service"""
+    """Get raw YAML for a Service. Optional query param: namespace (default 'virtualmachines')."""
     try:
+        namespace = request.args.get('namespace', 'virtualmachines')
         core_v1, _ = get_kubernetes_client()
         service = core_v1.read_namespaced_service(
             name=service_name,
-            namespace="virtualmachines"  # You might want to make this configurable
+            namespace=namespace
         )
-        return yaml.dump(service.to_dict(), default_flow_style=False)
+        # Use ApiClient.sanitize_for_serialization to produce canonical JSON keys
+        # (camelCase) rather than python attribute names (snake_case).
+        serialized = core_v1.api_client.sanitize_for_serialization(service)
+        yaml_body = yaml.safe_dump(serialized, default_flow_style=False, sort_keys=False)
+        return Response(yaml_body, mimetype='text/yaml')
     except Exception as e:
         logger.error(f"Error getting Service YAML: {str(e)}")
         return str(e), 500
