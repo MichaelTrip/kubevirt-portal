@@ -16,6 +16,11 @@ rules:
     resources: ["virtualmachines", "virtualmachineinstances"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   
+  # KubeVirt subresources for interactive access (VNC/Console)
+  - apiGroups: ["subresources.kubevirt.io"]
+    resources: ["virtualmachineinstances/vnc", "virtualmachineinstances/console"]
+    verbs: ["get"]
+  
   # DataVolume management
   - apiGroups: ["cdi.kubevirt.io"]
     resources: ["datavolumes"]
