@@ -3,92 +3,119 @@
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-pc-display me-2"></i>Virtual Machines</h1>
-        <div class="d-flex gap-3">
+        <div>
+            <h2 class="mb-1" style="font-weight: 600;">
+                <i class="bi bi-pc-display me-2" style="opacity: 0.7;"></i>Virtual Machines
+            </h2>
+            <p class="text-secondary mb-0" style="font-size: 0.875rem;">{{ config.YAML_SUBDIRECTORY }}</p>
+        </div>
+        <div class="d-flex gap-2">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary active" id="cardView">
-                    <i class="bi bi-grid-3x3-gap"></i>
+                <button type="button" class="btn btn-sm btn-outline-secondary active" id="cardView">
+                    <i class="bi bi-grid-3x3-gap me-1"></i>Cards
                 </button>
-                <button type="button" class="btn btn-outline-secondary" id="tableView">
-                    <i class="bi bi-table"></i>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="tableView">
+                    <i class="bi bi-table me-1"></i>Table
                 </button>
             </div>
             <a href="{{ url_for('main.create_vm') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-2"></i>Create New VM
+                <i class="bi bi-plus-circle me-1"></i>Create VM
             </a>
         </div>
     </div>
 
     {% if vms %}
-    <div id="cardLayout" class="row row-cols-1 row-cols-md-2 g-4">
+    <div id="cardLayout" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for vm in vms %}
         <div class="col">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-pc me-2"></i>{{ vm.name }}
+            <div class="card h-100 border" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header border-bottom" style="padding: 1.25rem 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%); border-bottom: 1px solid rgba(59, 130, 246, 0.15);">
+                    <h5 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="bi bi-pc" style="font-size: 1.2rem; color: #3b82f6;"></i>{{ vm.name }}
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-cpu me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">CPU Cores</small>
-                                    <strong>{{ vm.cpu }}</strong>
+                <div class="card-body" style="padding: 1.5rem;">
+                    <div class="row g-3 mb-3" style="margin-bottom: 1.5rem !important;">
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%); padding: 0.875rem; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.1);">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-cpu me-2" style="font-size: 1.1rem; color: #3b82f6; margin-top: 0.125rem;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">CPU</div>
+                                        <div style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 1rem; font-weight: 600;">{{ vm.cpu }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-memory me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Memory</small>
-                                    <strong>{{ vm.memory }}</strong>
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(139, 92, 246, 0.02) 100%); padding: 0.875rem; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.1);">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-memory me-2" style="font-size: 1.1rem; color: #8b5cf6; margin-top: 0.125rem;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">Memory</div>
+                                        <div style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 1rem; font-weight: 600;">{{ vm.memory }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-hdd me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Storage</small>
-                                    <strong>{{ vm.storage }}</strong>
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%); padding: 0.875rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.1);">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-hdd me-2" style="font-size: 1.1rem; color: #10b981; margin-top: 0.125rem;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">Storage</div>
+                                        <div style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 1rem; font-weight: 600;">{{ vm.storage }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-globe me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Hostname</small>
-                                    <strong>{{ vm.hostname }}</strong>
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.05) 0%, rgba(234, 88, 12, 0.02) 100%); padding: 0.875rem; border-radius: 8px; border: 1px solid rgba(234, 88, 12, 0.1);">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-globe me-2" style="font-size: 1.1rem; color: #ea580c; margin-top: 0.125rem;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 0.375rem; font-weight: 600;">Hostname</div>
+                                        <div style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 1rem; font-weight: 600; word-break: break-all;">{{ vm.hostname }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <hr>
-                    
-                    <div class="small text-muted mb-3">
-                        <div><i class="bi bi-box me-2"></i>Image: {{ vm.image.split('/')[-1] }}</div>
-                        {% if config.METALLB_ENABLED %}
-                        <div><i class="bi bi-diagram-2 me-2"></i>Network Pool: {{ vm.address_pool }}</div>
-                        {% endif %}
-                        {% if vm.tags %}
-                        <div class="mt-2">
-                            <i class="bi bi-tags me-2"></i>Tags:
-                            {% for tag in vm.tags %}
-                            <span class="badge bg-secondary me-1">{{ tag.key }}: {{ tag.value }}</span>
-                            {% endfor %}
+                    <div style="border-top: 2px solid rgba(59, 130, 246, 0.1); margin: 0 -1.5rem; padding: 1.25rem 1.5rem 0; background: linear-gradient(180deg, rgba(59, 130, 246, 0.02) 0%, transparent 100%);">
+                        <div style="font-size: 0.8125rem;">
+                            <div class="mb-3">
+                                <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin-bottom: 0.625rem; font-weight: 600;">
+                                    <i class="bi bi-box me-1" style="color: #ec4899;"></i>Image
+                                </div>
+                                <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit; word-break: break-all; display: inline-block;">{{ vm.image.split('/')[-1] }}</code>
+                            </div>
+                            {% if config.METALLB_ENABLED %}
+                            <div class="mb-3">
+                                <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin-bottom: 0.625rem; font-weight: 600;">
+                                    <i class="bi bi-diagram-2 me-1" style="color: #3b82f6;"></i>Network Pool
+                                </div>
+                                <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ vm.address_pool }}</code>
+                            </div>
+                            {% endif %}
+                            {% if vm.tags %}
+                            <div>
+                                <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; margin-bottom: 0.625rem; font-weight: 600;">
+                                    <i class="bi bi-tags me-1" style="color: #10b981;"></i>Tags
+                                </div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for tag in vm.tags %}
+                                    <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit;">{{ tag.key }}={{ tag.value }}</code>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
                     </div>
                 </div>
-                <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-end gap-2">
-                        <a href="{{ url_for('main.edit_vm', vm_name=vm.name) }}" class="btn btn-sm btn-outline-primary">
+                <div class="card-footer border-top" style="padding: 1rem 1.5rem; background: linear-gradient(180deg, transparent 0%, rgba(59, 130, 246, 0.02) 100%); border-top: 1px solid rgba(59, 130, 246, 0.15);">
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                        <a href="{{ url_for('main.edit_vm', vm_name=vm.name) }}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-pencil me-1"></i>Edit
                         </a>
                         <form action="{{ url_for('main.delete_vm', vm_name=vm.name) }}" method="POST" class="d-inline">
@@ -105,61 +132,93 @@
     </div>
 
     <div id="tableLayout" class="d-none">
-        <div class="card">
+        <div class="card border">
             <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>CPU</th>
-                            <th>Memory</th>
-                            <th>Storage</th>
-                            <th>Hostname</th>
-                            <th>Tags</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for vm in vms %}
-                        <tr>
-                            <td><i class="bi bi-pc me-2"></i>{{ vm.name }}</td>
-                            <td><i class="bi bi-cpu me-2"></i>{{ vm.cpu }}</td>
-                            <td><i class="bi bi-memory me-2"></i>{{ vm.memory }}</td>
-                            <td><i class="bi bi-hdd me-2"></i>{{ vm.storage }}</td>
-                            <td><i class="bi bi-globe me-2"></i>{{ vm.hostname }}</td>
-                            <td>
-                                {% if vm.tags %}
-                                {% for tag in vm.tags %}
-                                <span class="badge bg-secondary me-1">{{ tag.key }}: {{ tag.value }}</span>
-                                {% endfor %}
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a href="{{ url_for('main.edit_vm', vm_name=vm.name) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-pencil me-1"></i>Edit
-                                    </a>
-                                    <form action="{{ url_for('main.delete_vm', vm_name=vm.name) }}" method="POST" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                onclick="return confirm('Are you sure you want to delete this VM?')">
-                                            <i class="bi bi-trash me-1"></i>Delete
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" style="font-size: 0.875rem;">
+                        <thead style="background-color: var(--surface-bg, #f9fafb); border-bottom: 1px solid var(--border-color, #e5e7eb);">
+                            <tr>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Name</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">CPU</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Memory</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Storage</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Hostname</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Image</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem;">Labels</th>
+                                <th style="font-weight: 600; padding: 0.875rem 1rem; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vm in vms %}
+                            <tr style="border-bottom: 1px solid var(--border-color, #e5e7eb);">
+                                <td style="padding: 0.875rem 1rem;">
+                                    <i class="bi bi-pc me-2" style="opacity: 0.6;"></i>
+                                    <span style="font-weight: 500;">{{ vm.name }}</span>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="bi bi-cpu" style="opacity: 0.5; margin-right: 0.5rem;"></i>
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; background: transparent; color: inherit;">{{ vm.cpu }}</code>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="bi bi-memory" style="opacity: 0.5; margin-right: 0.5rem;"></i>
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; background: transparent; color: inherit;">{{ vm.memory }}</code>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="bi bi-hdd" style="opacity: 0.5; margin-right: 0.5rem;"></i>
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; background: transparent; color: inherit;">{{ vm.storage }}</code>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="bi bi-globe" style="opacity: 0.5; margin-right: 0.5rem;"></i>
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; background: transparent; color: inherit;">{{ vm.hostname }}</code>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="bi bi-box" style="opacity: 0.5; margin-right: 0.5rem;"></i>
+                                        <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; background: transparent; color: inherit;">{{ vm.image.split('/')[-1] }}</code>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.875rem 1rem;">
+                                    {% if vm.tags %}
+                                    {% for tag in vm.tags %}
+                                    <code style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; font-size: 0.8125rem; padding: 0.25rem 0.5rem; background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0.25rem; color: inherit; display: inline-block; margin: 0.125rem;">{{ tag.key }}={{ tag.value }}</code>
+                                    {% endfor %}
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.875rem 1rem; text-align: right;">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('main.edit_vm', vm_name=vm.name) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-pencil me-1"></i>Edit
+                                        </a>
+                                        <form action="{{ url_for('main.delete_vm', vm_name=vm.name) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="return confirm('Are you sure you want to delete this VM?')">
+                                                <i class="bi bi-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
     {% else %}
-    <div class="card">
+    <div class="card border">
         <div class="card-body text-center py-5">
-            <i class="bi bi-inbox display-1 text-muted mb-3"></i>
-            <h3 class="text-muted">No VMs Found</h3>
-            <p class="text-muted mb-0">Directory: {{ config.YAML_SUBDIRECTORY }}</p>
+            <i class="bi bi-inbox mb-3" style="font-size: 4rem; opacity: 0.3; display: block;"></i>
+            <h3 style="font-weight: 600; opacity: 0.7; margin-bottom: 0.5rem;">No VMs Found</h3>
+            <p style="opacity: 0.6; margin-bottom: 0;">{{ config.YAML_SUBDIRECTORY }}</p>
         </div>
     </div>
     {% endif %}

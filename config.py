@@ -15,14 +15,20 @@ class Config:
     # YAML configuration
     YAML_SUBDIRECTORY = os.getenv('YAML_SUBDIRECTORY', 'virtualmachines/')
     
-    # Git clone directory
-    GIT_CLONE_DIR = os.getenv('GIT_CLONE_DIR', '/app/storage/clones')
+    # Git clone directory - use /tmp for local dev, /app for Docker
+    GIT_CLONE_DIR = os.getenv('GIT_CLONE_DIR', '/tmp/kubevirt-portal/clones')
     
     # Feature flags
     EXTERNAL_DNS_ENABLED = os.getenv('EXTERNAL_DNS_ENABLED', 'false').lower() == 'true'
     METALLB_ENABLED = os.getenv('METALLB_ENABLED', 'false').lower() == 'true'
     CLUSTER_VMS_ENABLED = os.getenv('CLUSTER_VMS_ENABLED', 'false').lower() == 'true'
     DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
+    
+    # External DNS configuration
+    EXTERNAL_DNS_DOMAIN = os.getenv('EXTERNAL_DNS_DOMAIN', 'k8s-lan.example.com')
+    
+    # MetalLB configuration
+    METALLB_DEFAULT_POOL = os.getenv('METALLB_DEFAULT_POOL', 'default')
 
     def __init__(self):
         # Validate immediately during initialization

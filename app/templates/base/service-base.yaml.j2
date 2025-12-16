@@ -4,7 +4,7 @@ metadata:
   labels:
     kubevirt.io/vm: {{ vm_name }}
   name: {{ vm_name }}
-{% if service_type == 'LoadBalancer' and (address_pool or hostname) %}
+{% if address_pool or hostname %}
   annotations:
 {% if address_pool %}
     metallb.universe.tf/address-pool: {{ address_pool }}
@@ -28,4 +28,3 @@ spec:
   selector:
     kubevirt.io/vm: {{ vm_name }}
   type: {{ service_type }}
-

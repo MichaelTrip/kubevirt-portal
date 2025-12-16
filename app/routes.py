@@ -13,6 +13,9 @@ import yaml
 from config import Config
 import logging
 import git
+import ssl
+from kubernetes import client as k8s_client
+import websocket
 
 logger = logging.getLogger(__name__)
 main = Blueprint('main', __name__)
@@ -34,6 +37,9 @@ def create_vm():
     form = VMForm()
     if request.method == 'GET':
         form.subdirectory.data = Config.YAML_SUBDIRECTORY
+        # Set default address pool if MetalLB is enabled
+        if Config.METALLB_ENABLED:
+            form.address_pool.data = Config.METALLB_DEFAULT_POOL
     if form.validate_on_submit():
         try:
             # Debug logging for service ports
@@ -61,6 +67,11 @@ def create_vm():
                 }
                 tags_data.append(tag_data)
 
+            # Only include hostname and address_pool for LoadBalancer service type
+            service_type = form.service_type.data
+            hostname = form.hostname.data if service_type == 'LoadBalancer' else None
+            address_pool = form.address_pool.data if service_type == 'LoadBalancer' else None
+
             form_data = {
                 'vm_name': form.vm_name.data,
                 'tags': tags_data,
@@ -70,10 +81,10 @@ def create_vm():
                 'storage_class': form.storage_class.data,
                 'image_url': form.image_url.data,
                 'user_data': form.user_data.data,
-                'hostname': form.hostname.data,
-                'address_pool': form.address_pool.data,
+                'hostname': hostname,
+                'address_pool': address_pool,
                 'service_ports': service_ports_data,
-                'service_type': form.service_type.data
+                'service_type': service_type
             }
 
             logger.info(f"Processed service ports: {service_ports_data}")
@@ -137,6 +148,11 @@ def edit_vm(vm_name):
                 }
                 tags_data.append(tag_data)
 
+            # Only include hostname and address_pool for LoadBalancer service type
+            service_type = form.service_type.data
+            hostname = form.hostname.data if service_type == 'LoadBalancer' else None
+            address_pool = form.address_pool.data if service_type == 'LoadBalancer' else None
+
             form_data = {
                 'vm_name': vm_name,
                 'tags': tags_data,
@@ -146,10 +162,10 @@ def edit_vm(vm_name):
                 'storage_class': form.storage_class.data,
                 'image_url': form.image_url.data,
                 'user_data': form.user_data.data,
-                'hostname': form.hostname.data,
-                'address_pool': form.address_pool.data,
+                'hostname': hostname,
+                'address_pool': address_pool,
                 'service_ports': service_ports_data,
-                'service_type': form.service_type.data
+                'service_type': service_type
             }
 
             if 'preview' in request.form:
@@ -212,10 +228,19 @@ def get_vm_yaml(vm_name):
 def terminal(vm_name):
     """Web-based SSH terminal"""
     host = request.args.get('host')
+    embedded = request.args.get('embedded', '0') == '1'
     if not host:
         flash('No host IP provided', 'error')
         return redirect(url_for('main.cluster_vms'))
-    return render_template('terminal.html', vm_name=vm_name, host=host)
+    return render_template('terminal.html', vm_name=vm_name, host=host, embedded=embedded)
+
+
+@main.route('/console/<vm_name>')
+def console(vm_name):
+    """Web-based KubeVirt serial console (proxied via API)"""
+    namespace = request.args.get('namespace', 'virtualmachines')
+    embedded = request.args.get('embedded', '0') == '1'
+    return render_template('console.html', vm_name=vm_name, namespace=namespace, embedded=embedded)
 
 
 def init_ssh_client():
@@ -311,6 +336,334 @@ def ssh_websocket(ws):
             channel.close()
         if client:
             client.close()
+
+
+@sock.route('/console/ws')
+def console_websocket(ws):
+    """WebSocket proxy to KubeVirt VM serial console subresource"""
+    vm_name = request.args.get('vm_name')
+    namespace = request.args.get('namespace', 'virtualmachines')
+
+    if not vm_name:
+        ws.send("Error: vm_name is required")
+        return
+
+    # Ensure Kubernetes config is loaded
+    try:
+        get_kubernetes_client()
+    except Exception as e:
+        ws.send(f"Error loading Kubernetes config: {str(e)}")
+        return
+
+    # Prepare upstream KubeVirt console websocket URL
+    api = k8s_client.ApiClient()
+    cfg = api.configuration
+    host = cfg.host  # e.g., https://10.96.0.1
+    scheme = 'wss' if host.startswith('https') else 'ws'
+    base = host.split('://', 1)[1]
+    upstream_url = f"{scheme}://{base}/apis/subresources.kubevirt.io/v1/namespaces/{namespace}/virtualmachineinstances/{vm_name}/console"
+
+    # Validate that VMI exists to fail fast with clear message
+    try:
+        _, custom_api = get_kubernetes_client()
+        custom_api.get_namespaced_custom_object(
+            group="kubevirt.io",
+            version="v1",
+            namespace=namespace,
+            plural="virtualmachineinstances",
+            name=vm_name
+        )
+    except Exception as e:
+        ws.send(f"\r\nConsole error: VMI {namespace}/{vm_name} not found or inaccessible: {str(e)}\r\n")
+        return
+
+    headers = []
+    # Prefer API key with prefix (e.g., 'Bearer <token>')
+    try:
+        token_with_prefix = cfg.get_api_key_with_prefix('authorization')
+    except Exception:
+        token_with_prefix = None
+    if token_with_prefix:
+        headers.append(f"Authorization: {token_with_prefix}")
+
+    sslopt = {}
+    if cfg.verify_ssl:
+        sslopt['cert_reqs'] = ssl.CERT_REQUIRED
+        if cfg.ssl_ca_cert:
+            sslopt['ca_certs'] = cfg.ssl_ca_cert
+    else:
+        sslopt['cert_reqs'] = ssl.CERT_NONE
+
+    # Support client certificate authentication
+    if getattr(cfg, 'cert_file', None) and getattr(cfg, 'key_file', None):
+        sslopt['certfile'] = cfg.cert_file
+        sslopt['keyfile'] = cfg.key_file
+
+    upstream = None
+    try:
+        # Inform client about target
+        try:
+            ws.send(f"Connecting to {namespace}/{vm_name}...\r\n")
+        except Exception:
+            pass
+        # Do NOT pass subprotocols: some API servers do not echo them and
+        # websocket-client will reject the handshake if any are specified.
+        upstream = websocket.create_connection(
+            upstream_url,
+            header=headers,
+            sslopt=sslopt,
+            timeout=10
+        )
+
+        def pump_upstream():
+            try:
+                while True:
+                    data = upstream.recv()
+                    if data is None:
+                        break
+                    # KubeVirt console uses channel framing over binary WS
+                    if isinstance(data, bytes) and len(data) > 0:
+                        ch = data[0]
+                        payload = data[1:]
+                        # stdout (1) and stderr (2)
+                        if ch in (1, 2):
+                            try:
+                                ws.send(payload.decode('utf-8', 'ignore'))
+                            except Exception:
+                                # Fallback: send as replacement char
+                                ws.send('\ufffd')
+                        elif ch == 3:
+                            # error channel
+                            try:
+                                ws.send(("\r\nConsole error: " + payload.decode('utf-8', 'ignore') + "\r\n"))
+                            except Exception:
+                                ws.send("\r\nConsole error\r\n")
+                        else:
+                            # ignore other channels (stdin=0, resize=4)
+                            pass
+                    else:
+                        # Text frames: forward directly
+                        if isinstance(data, (bytes, bytearray)):
+                            try:
+                                ws.send(data.decode('utf-8', 'ignore'))
+                            except Exception:
+                                ws.send('\ufffd')
+                        else:
+                            ws.send(str(data))
+            except Exception as e:
+                try:
+                    ws.send(f"\r\nConsole error: upstream receive failed: {str(e)}\r\n")
+                except Exception:
+                    pass
+
+        t = threading.Thread(target=pump_upstream)
+        t.daemon = True
+        t.start()
+
+        while True:
+            msg = ws.receive()
+            if msg is None:
+                break
+            try:
+                # Support simple JSON messages for control (resize)
+                if isinstance(msg, str):
+                    try:
+                        obj = json.loads(msg)
+                        if isinstance(obj, dict) and obj.get('type') == 'resize':
+                            payload = json.dumps({
+                                'Width': int(obj.get('cols', obj.get('width', 80))),
+                                'Height': int(obj.get('rows', obj.get('height', 24)))
+                            }).encode('utf-8')
+                            framed = bytes([4]) + payload
+                            upstream.send(framed, opcode=websocket.ABNF.OPCODE_BINARY)
+                            continue
+                    except Exception:
+                        # Not JSON or invalid control, treat as stdin
+                        pass
+                # Default: stdin channel (0)
+                msg_bytes = msg.encode('utf-8') if isinstance(msg, str) else msg
+                framed = bytes([0]) + msg_bytes
+                upstream.send(framed, opcode=websocket.ABNF.OPCODE_BINARY)
+            except Exception as e:
+                try:
+                    ws.send(f"\r\nConsole error: upstream send failed: {str(e)}\r\n")
+                except Exception:
+                    pass
+                break
+    except Exception as e:
+        try:
+            ws.send(f"\r\nConsole error: {str(e)}\r\n")
+        except Exception:
+            pass
+    finally:
+        try:
+            if upstream:
+                upstream.close()
+        except Exception:
+            pass
+
+
+@main.route('/vnc/<vm_name>')
+def vnc(vm_name):
+    """Web-based VNC viewer for KubeVirt VMI"""
+    namespace = request.args.get('namespace', 'virtualmachines')
+    embedded = request.args.get('embedded', '0') == '1'
+    return render_template('vnc.html', vm_name=vm_name, namespace=namespace, embedded=embedded)
+
+
+@sock.route('/vnc/ws')
+def vnc_websocket(ws):
+    """WebSocket proxy to KubeVirt VNC subresource"""
+    vm_name = request.args.get('vm_name')
+    namespace = request.args.get('namespace', 'virtualmachines')
+
+    if not vm_name:
+        ws.send("VNC error: vm_name is required")
+        return
+
+    # Ensure Kubernetes config is loaded
+    try:
+        get_kubernetes_client()
+    except Exception as e:
+        ws.send(f"VNC error: Kubernetes config not loaded: {str(e)}")
+        return
+
+    # Build upstream VNC URL
+    api = k8s_client.ApiClient()
+    cfg = api.configuration
+    host = cfg.host
+    scheme = 'wss' if host.startswith('https') else 'ws'
+    base = host.split('://', 1)[1]
+    upstream_url = f"{scheme}://{base}/apis/subresources.kubevirt.io/v1/namespaces/{namespace}/virtualmachineinstances/{vm_name}/vnc"
+
+    # Validate VMI exists
+    try:
+        _, custom_api = get_kubernetes_client()
+        custom_api.get_namespaced_custom_object(
+            group="kubevirt.io",
+            version="v1",
+            namespace=namespace,
+            plural="virtualmachineinstances",
+            name=vm_name
+        )
+    except Exception as e:
+        ws.send(f"VNC error: VMI {namespace}/{vm_name} not found or inaccessible: {str(e)}")
+        return
+
+    headers = []
+    try:
+        token_with_prefix = cfg.get_api_key_with_prefix('authorization')
+    except Exception:
+        token_with_prefix = None
+    if token_with_prefix:
+        headers.append(f"Authorization: {token_with_prefix}")
+    # Hint upstream to use raw binary subprotocol without enforcing at client
+    headers.append("Sec-WebSocket-Protocol: binary.kubevirt.io")
+
+    sslopt = {}
+    if cfg.verify_ssl:
+        sslopt['cert_reqs'] = ssl.CERT_REQUIRED
+        if cfg.ssl_ca_cert:
+            sslopt['ca_certs'] = cfg.ssl_ca_cert
+    else:
+        sslopt['cert_reqs'] = ssl.CERT_NONE
+    if getattr(cfg, 'cert_file', None) and getattr(cfg, 'key_file', None):
+        sslopt['certfile'] = cfg.cert_file
+        sslopt['keyfile'] = cfg.key_file
+
+    upstream = None
+    mode_channel = None  # Detect framing after first upstream frame
+    try:
+        try:
+            ws.send(f"Connecting VNC to {namespace}/{vm_name}...\r\n")
+        except Exception:
+            pass
+
+        upstream = websocket.create_connection(
+            upstream_url,
+            header=headers,
+            sslopt=sslopt,
+            timeout=10
+        )
+
+        # Pump upstream -> client
+        def pump_upstream():
+            nonlocal mode_channel
+            try:
+                while True:
+                    data = upstream.recv()
+                    if data is None:
+                        break
+                    if isinstance(data, (bytes, bytearray)) and len(data) > 0:
+                        # Detect framing on first packet
+                        if mode_channel is None:
+                            mode_channel = (data[0] in (0,1,2,3,4))
+                        if mode_channel:
+                            ch = data[0]
+                            payload = data[1:]
+                            if ch in (1, 2):
+                                ws.send(payload)
+                            elif ch == 3:
+                                # Error channel as text
+                                try:
+                                    ws.send(("VNC error: " + payload.decode('utf-8', 'ignore')))
+                                except Exception:
+                                    ws.send("VNC error")
+                            else:
+                                # ignore other channels
+                                pass
+                        else:
+                            # Raw VNC bytes
+                            ws.send(data)
+                    else:
+                        # Text frame
+                        try:
+                            ws.send(str(data))
+                        except Exception:
+                            pass
+            except Exception as e:
+                try:
+                    ws.send(f"VNC error: upstream receive failed: {str(e)}", binary=False)
+                except Exception:
+                    pass
+
+        t = threading.Thread(target=pump_upstream)
+        t.daemon = True
+        t.start()
+
+        # Client -> upstream
+        while True:
+            msg = ws.receive()
+            if msg is None:
+                break
+            try:
+                if isinstance(msg, str):
+                    # noVNC may send control messages; forward as text
+                    upstream.send(msg)
+                else:
+                    # Binary
+                    if mode_channel:
+                        framed = bytes([0]) + msg
+                        upstream.send(framed, opcode=websocket.ABNF.OPCODE_BINARY)
+                    else:
+                        upstream.send(msg, opcode=websocket.ABNF.OPCODE_BINARY)
+            except Exception as e:
+                try:
+                    ws.send(f"VNC error: upstream send failed: {str(e)}", binary=False)
+                except Exception:
+                    pass
+                break
+    except Exception as e:
+        try:
+            ws.send(f"VNC error: {str(e)}", binary=False)
+        except Exception:
+            pass
+    finally:
+        try:
+            if upstream:
+                upstream.close()
+        except Exception:
+            pass
 
 @main.route('/api/vm/<vm_name>/power/<action>', methods=['POST'])
 def vm_power(vm_name, action):

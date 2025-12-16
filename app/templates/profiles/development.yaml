@@ -1,0 +1,24 @@
+# Development profile - minimal resources
+name: development
+description: Lightweight VM configuration for development environments
+
+defaults:
+  cpu_cores: 1
+  memory: 2
+  storage_size: 10
+  storage_class: longhorn-rwx
+  storage_access_mode: ReadWriteMany
+  service_type: ClusterIP
+  network_config:
+    interface_name: enp1s0
+    enable_dhcp: true
+    enable_ipv6: false
+
+templates:
+  vm: base/vm-base.yaml.j2
+  service: base/service-base.yaml.j2
+
+validation:
+  max_cpu_cores: 4
+  max_memory_gb: 8
+  max_storage_gb: 50

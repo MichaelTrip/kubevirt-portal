@@ -1,0 +1,8 @@
+{# Storage configuration snippet #}
+storage:
+  resources:
+    requests:
+      storage: {{ storage_size }}Gi
+  accessModes:
+    - {{ storage_access_mode }}
+  storageClassName: {{ storage_class }}

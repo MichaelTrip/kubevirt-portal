@@ -1,4 +1,4 @@
-name: Build Development Image
+name: Build and Push Image
 
 on:
   push:
@@ -34,16 +34,44 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract branch name
+        shell: bash
+        run: |
+          BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+          BRANCH_NAME_CLEAN=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9._-]/-/g')
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "BRANCH_NAME_CLEAN=$BRANCH_NAME_CLEAN" >> $GITHUB_ENV
+
       - name: Generate build version
         id: version
         run: |
-          echo "BUILD_VERSION=$(date +'%Y%m%d')-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          BUILD_DATE=$(date +'%Y%m%d')
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "BUILD_VERSION=$BUILD_DATE-$SHORT_SHA" >> $GITHUB_ENV
+          echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
+          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
+
+      - name: Generate Docker tags for main branch
+        if: env.BRANCH_NAME == 'main'
+        run: |
+          echo "DOCKER_TAGS<<EOF" >> $GITHUB_ENV
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_ENV
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BUILD_VERSION }}" >> $GITHUB_ENV
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BUILD_DATE }}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Generate Docker tags for development branches
+        if: env.BRANCH_NAME != 'main'
+        run: |
+          echo "DOCKER_TAGS<<EOF" >> $GITHUB_ENV
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ env.BRANCH_NAME_CLEAN }}-${{ env.BUILD_VERSION }}" >> $GITHUB_ENV
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ env.BRANCH_NAME_CLEAN }}-latest" >> $GITHUB_ENV
+          echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-${{ env.BUILD_VERSION }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
+          tags: ${{ env.DOCKER_TAGS }}

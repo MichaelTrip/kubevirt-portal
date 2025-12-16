@@ -15,3 +15,5 @@ docutils<0.21
 sphinx<8,>=5
 dulwich<0.22.0
 keyring<25.0.0
+pydantic>=2.0.0,<3.0.0
+websocket-client>=1.7.0

@@ -1,0 +1,17 @@
+{# Network configuration snippet #}
+{% if network_config.enable_dhcp or network_config.enable_ipv6 %}
+network:
+  version: 1
+  config:
+    - type: physical
+      name: {{ network_config.interface_name }}
+      subnets:
+        {% if network_config.enable_dhcp %}
+        - type: dhcp
+        {% endif %}
+        {% if network_config.enable_ipv6 and network_config.ipv6_address %}
+        - type: static6
+          address: {{ network_config.ipv6_address }}
+          gateway: {{ network_config.ipv6_gateway }}
+        {% endif %}
+{% endif %}

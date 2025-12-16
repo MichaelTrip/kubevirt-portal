@@ -1,0 +1,26 @@
+# Default profile configuration
+name: default
+description: Default VM configuration profile
+
+defaults:
+  cpu_cores: 2
+  memory: 4
+  storage_size: 20
+  storage_class: longhorn-rwx
+  storage_access_mode: ReadWriteMany
+  service_type: LoadBalancer
+  network_config:
+    interface_name: enp1s0
+    enable_dhcp: true
+    enable_ipv6: true
+    ipv6_address: "fd10:0:2::2/120"
+    ipv6_gateway: "fd10:0:2::1"
+
+templates:
+  vm: base/vm-base.yaml.j2
+  service: base/service-base.yaml.j2
+
+validation:
+  max_cpu_cores: 32
+  max_memory_gb: 128
+  max_storage_gb: 4096
