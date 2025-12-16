@@ -58,12 +58,34 @@ jobs:
           echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
           echo "Bump type: $BUMP_TYPE"
 
+      - name: Override bump via PR labels
+        id: override
+        run: |
+          set -e
+          # Read PR labels from event payload
+          LABELS=$(jq -r '.pull_request.labels[].name' <<<'${{ toJson(github.event) }}' | tr '\n' ' ')
+          OVERRIDE=""
+          for l in $LABELS; do
+            case "$l" in
+              release:major) OVERRIDE="major" ;;
+              release:minor) OVERRIDE="minor" ;;
+              release:patch) OVERRIDE="patch" ;;
+            esac
+          done
+          if [ -n "$OVERRIDE" ]; then
+            echo "Using label override: $OVERRIDE"
+            echo "bump_type=$OVERRIDE" >> $GITHUB_OUTPUT
+          else
+            echo "No override label found; keeping recommended bump"
+            echo "bump_type=${{ steps.bump.outputs.bump_type }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Compute next version
         id: nextver
         run: |
           set -e
           LAST_TAG="${{ steps.lasttag.outputs.last_tag }}"
-          BUMP="${{ steps.bump.outputs.bump_type }}"
+          BUMP="${{ steps.override.outputs.bump_type }}"
           LAST_VER=${LAST_TAG#v}
           MAJOR=$(echo $LAST_VER | cut -d. -f1)
           MINOR=$(echo $LAST_VER | cut -d. -f2)
