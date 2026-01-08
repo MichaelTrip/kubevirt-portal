@@ -25,6 +25,7 @@ jobs:
           else
             # Forgejo/Gitea uses the instance domain as registry
             echo "REGISTRY=$(echo ${{ github.server_url }} | sed 's|https://||')" >> $GITHUB_ENV
+            echo "GITHUB_TOKEN=${{ secrets.FORGEJO_TOKEN }}" >> $GITHUB_ENV
           fi
 
       - name: Set image name
