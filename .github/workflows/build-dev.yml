@@ -10,9 +10,6 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -21,6 +18,15 @@ jobs:
       packages: write
 
     steps:
+      - name: Set registry
+        run: |
+          if [[ "${{ github.server_url }}" == "https://github.com" ]]; then
+            echo "REGISTRY=ghcr.io" >> $GITHUB_ENV
+          else
+            # Forgejo/Gitea uses the instance domain as registry
+            echo "REGISTRY=$(echo ${{ github.server_url }} | sed 's|https://||')" >> $GITHUB_ENV
+          fi
+
       - name: Set image name
         run: |
           echo "IMAGE_NAME=$(echo ${{ github.repository_owner }}/kubevirt-portal | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
