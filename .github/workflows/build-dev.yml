@@ -18,14 +18,15 @@ jobs:
     #   packages: write
 
     steps:
-      - name: Set registry
+      - name: Set registry and token
         run: |
           if [[ "${{ github.server_url }}" == "https://github.com" ]]; then
             echo "REGISTRY=ghcr.io" >> $GITHUB_ENV
+            echo "CONTAINER_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
           else
             # Forgejo/Gitea uses the instance domain as registry
             echo "REGISTRY=$(echo ${{ github.server_url }} | sed 's|https://||')" >> $GITHUB_ENV
-            echo "GITHUB_TOKEN=${{ secrets.FORGEJOTOKEN }}" >> $GITHUB_ENV
+            echo "CONTAINER_TOKEN=${{ secrets.FORGEJOTOKEN }}" >> $GITHUB_ENV
           fi
 
       - name: Set image name
@@ -40,7 +41,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ env.CONTAINER_TOKEN }}
 
       - name: Extract branch name
         shell: bash
